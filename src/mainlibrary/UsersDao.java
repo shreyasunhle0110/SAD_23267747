@@ -5,10 +5,12 @@
  */
 package mainlibrary;
 
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -20,10 +22,14 @@ public class UsersDao {
         boolean status = false;
         try {
             Connection con = DB.getConnection();
-            String select = "select * from Users where UserName= '" + name + "' and UserPass='"+ password +"'";
-            Statement selectStatement = con.createStatement();
-            ResultSet rs = selectStatement.executeQuery(select);
-            status = rs.next();
+            String select = "SELECT UserPass FROM Users WHERE UserName = ?";
+            PreparedStatement ps = con.prepareStatement(select);
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String hashedPassword = rs.getString("UserPass");
+                status = BCrypt.checkpw(password, hashedPassword);
+            }
             con.close();
         } catch (Exception e) {
             System.out.println(e);
@@ -35,37 +41,35 @@ public class UsersDao {
         boolean status = false;
         try {
             Connection con = DB.getConnection();
-            String select = "select * from Users where UserName= '" + UserName +"'";
-            Statement selectStatement = con.createStatement();
-            ResultSet rs = selectStatement.executeQuery(select);
+            String select = "select * from Users where UserName= ?";
+            PreparedStatement ps = con.prepareStatement(select);
+            ps.setString(1, UserName);
+            ResultSet rs = ps.executeQuery();
             status = rs.next();
             con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
         return status;
-
     }
 
     public static int AddUser(String User, String UserPass, String UserEmail, String Date) {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-
         int status = 0;
         try {
-
             Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("insert into Users(UserPass,RegDate,UserName,Email) values(?,?,?,?)");
-            ps.setString(1, UserPass);
-            ps.setString(2, Date);
-            ps.setString(3, User);
-            ps.setString(4, UserEmail);
+            String hashedPassword = BCrypt.hashpw(UserPass, BCrypt.gensalt(12));
+            String insert = "INSERT INTO Users (UserName, UserPass, Email, RegDate) VALUES (?, ?, ?, ?)";
+            PreparedStatement ps = con.prepareStatement(insert);
+            ps.setString(1, User);
+            ps.setString(2, hashedPassword);
+            ps.setString(3, UserEmail);
+            ps.setString(4, Date);
             status = ps.executeUpdate();
             con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
         return status;
-
     }
 
 }

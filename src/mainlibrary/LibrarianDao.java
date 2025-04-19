@@ -9,7 +9,7 @@ public class LibrarianDao {
         try {
 
             Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("insert into librarian(name,password,email,address,city,contact) values(?,?,?,?,?,?)");
+            PreparedStatement ps = con.prepareStatement("INSERT INTO librarian(name, password, email, address, city, contact) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setString(1, name);
             ps.setString(2, password);
             ps.setString(3, email);
@@ -28,7 +28,7 @@ public class LibrarianDao {
         int status = 0;
         try {
             Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("delete from Librarian where id=?");
+            PreparedStatement ps = con.prepareStatement("DELETE FROM Librarian WHERE id = ?");
             ps.setInt(1, id);
             status = ps.executeUpdate();
             con.close();
@@ -42,9 +42,10 @@ public class LibrarianDao {
         boolean status = false;
         try {
             Connection con = DB.getConnection();
-            String select = "select * from Librarian where UserName= '" + name + "' and Password='"+ password +"'";
-            Statement selectStatement = con.createStatement();
-            ResultSet rs = selectStatement.executeQuery(select);
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM Librarian WHERE UserName = ? AND Password = ?");
+            ps.setString(1, name);
+            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
           
             status = rs.next();
             con.close();

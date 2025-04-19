@@ -19,21 +19,29 @@
     <!-- Compile sources -->
     <target name="compile">
         <mkdir dir="${build.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}">
+            <classpath>
+                <fileset dir="${lib.dir}">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+        </javac>
     </target>
 
-    <!-- Create JAR with MySQL connector in Class-Path -->
+    <!-- Create JAR with MySQL connector and jBCrypt in Class-Path -->
     <target name="jar" depends="compile">
         <mkdir dir="${dist.dir}"/>
         <!-- Create dist/lib directory -->
         <mkdir dir="${dist.dir}/lib"/>
         <!-- Copy MySQL connector JAR to dist/lib -->
-        <copy file="mysql-connector-j-9.3.0.jar" todir="${dist.dir}/lib"/>
+        <copy file="lib/mysql-connector-j-9.3.0.jar" todir="${dist.dir}/lib"/>
+        <!-- Copy jBCrypt JAR to dist/lib -->
+        <copy file="lib/jBCrypt-0.4.jar" todir="${dist.dir}/lib"/>
         <!-- Generate manifest with Class-Path entry -->
         <jar destfile="${dist.dir}/securityProject.jar" basedir="${build.dir}">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
-                <attribute name="Class-Path" value="lib/mysql-connector-j-9.3.0.jar"/>
+                <attribute name="Class-Path" value="lib/mysql-connector-j-9.3.0.jar lib/jBCrypt-0.4.jar"/>
             </manifest>
         </jar>
     </target>
@@ -47,6 +55,9 @@
             <jvmarg value="-Dhttps.proxyPort=8080"/>
             <classpath>
                 <path refid="run.classpath"/>
+                <fileset dir="${lib.dir}">
+                    <include name="*.jar"/>
+                </fileset>
             </classpath>
         </java>
     </target>

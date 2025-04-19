@@ -10,14 +10,12 @@ Security Issues and Recommendations
 2. SQL Injection Vulnerabilities
 --------------------------------
 - Issue: SQL queries are constructed using string concatenation.
-- Risk: Attackers can inject malicious SQL queries to access or manipulate the database.
-- Fix: Use prepared statements to prevent SQL injection.
+- Fix: Prepared statements are now used to prevent SQL injection.
 
 3. Weak Password Storage
 ------------------------
 - Issue: Passwords are stored in plain text in the database.
-- Risk: If the database is compromised, attackers can directly access user passwords.
-- Fix: Hash passwords using a secure algorithm like bcrypt before storing them.
+- Fix: Passwords are now hashed using bcrypt before storing them.
 
 4. Missing Input Validation
 ---------------------------

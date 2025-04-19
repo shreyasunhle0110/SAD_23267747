@@ -38,7 +38,7 @@ public class ViewBook extends javax.swing.JFrame {
         // String Data[][]=null;
         //  String Column[]=null;
         try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("select * from Books", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
             ResultSet rs = ps.executeQuery();
 
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -267,7 +267,7 @@ public class ViewBook extends javax.swing.JFrame {
             //  String Column[]=null;
             String Search = "%" + SearchField.getText() + "%";
             try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("select * from Books where BookName like ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books WHERE BookName LIKE ?");
                 ps.setString(1, Search);
                 ResultSet rs = ps.executeQuery();
 
@@ -311,7 +311,7 @@ public class ViewBook extends javax.swing.JFrame {
             //  String Column[]=null;
             String Search = "%" + SearchField.getText() + "%";
             try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("select * from Books where Author like ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books WHERE BookName LIKE ?");
                 ps.setString(1, Search);
                 ResultSet rs = ps.executeQuery();
 
@@ -388,7 +388,7 @@ public class ViewBook extends javax.swing.JFrame {
         // String Data[][]=null;
         //  String Column[]=null;
         try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("select * from Books", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
             ResultSet rs = ps.executeQuery();
 
             ResultSetMetaData rsmd = rs.getMetaData();

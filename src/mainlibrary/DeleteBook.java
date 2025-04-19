@@ -6,6 +6,8 @@
 package mainlibrary;
 
 import javax.swing.JOptionPane;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 /**
  *
@@ -125,17 +127,28 @@ public class DeleteBook extends javax.swing.JFrame {
         if (LibrarianDao.validate(UserName.getText(), Pass)) {
 
             int BookIDV = Integer.parseInt(BookID.getText());
-            if (TransBookDao.CheckIssuedBook(BookIDV)) {
-                JOptionPane.showMessageDialog(DeleteBook.this, "Book is Issued", "Error!", JOptionPane.ERROR_MESSAGE);
-            } else {
-                if (BookDao.Delete(BookIDV) != 0) {
-                    JOptionPane.showMessageDialog(DeleteBook.this, "Book is Deleted", "Deleted!", JOptionPane.ERROR_MESSAGE);
-                    UserName.setText("");
-                    password.setText("");
-                    BookID.setText("");
+            try (Connection con = DB.getConnection()) {
+                PreparedStatement psCheckIssued = con.prepareStatement("SELECT * FROM IssuedBook WHERE BookID = ?");
+                psCheckIssued.setInt(1, BookIDV);
+
+                if (psCheckIssued.executeQuery().next()) {
+                    JOptionPane.showMessageDialog(DeleteBook.this, "Book is Issued", "Error!", JOptionPane.ERROR_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(DeleteBook.this, "Unable to delete book", "Error!", JOptionPane.ERROR_MESSAGE);
+                    PreparedStatement psDeleteBook = con.prepareStatement("DELETE FROM Books WHERE BookID = ?");
+                    psDeleteBook.setInt(1, BookIDV);
+
+                    if (psDeleteBook.executeUpdate() != 0) {
+                        JOptionPane.showMessageDialog(DeleteBook.this, "Book is Deleted", "Deleted!", JOptionPane.ERROR_MESSAGE);
+                        UserName.setText("");
+                        password.setText("");
+                        BookID.setText("");
+                    } else {
+                        JOptionPane.showMessageDialog(DeleteBook.this, "Unable to delete book", "Error!", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(DeleteBook.this, "Error occurred while deleting book", "Error!", JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_jButton1ActionPerformed

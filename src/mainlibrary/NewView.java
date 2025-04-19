@@ -39,7 +39,12 @@ public class NewView extends javax.swing.JFrame {
         // String Data[][]=null;
         //  String Column[]=null;
         try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,IssuedBook.UserID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement ps = Con.prepareStatement(
+                "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                "FROM Books, IssuedBook " +
+                "WHERE Books.BookID = IssuedBook.BookID",
+                ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
+            );
             ResultSet rs = ps.executeQuery();
 
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -252,7 +257,12 @@ public class NewView extends javax.swing.JFrame {
             //  String Column[]=null;
             String Search = "%" + SearchField.getText() + "%";
             try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,IssuedBook.UserID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID and Books.BookName like ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                PreparedStatement ps = Con.prepareStatement(
+                    "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                    "FROM Books, IssuedBook " +
+                    "WHERE Books.BookID = IssuedBook.BookID AND Books.BookName LIKE ?",
+                    ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
+                );
                 ps.setString(1, Search);
                 ResultSet rs = ps.executeQuery();
 
@@ -412,7 +422,12 @@ public class NewView extends javax.swing.JFrame {
             model.removeRow(model.getRowCount() - 1);
         }
         try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,IssuedBook.UserID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement ps = Con.prepareStatement(
+                "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                "FROM Books, IssuedBook " +
+                "WHERE Books.BookID = IssuedBook.BookID",
+                ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
+            );
             ResultSet rs = ps.executeQuery();
 
             ResultSetMetaData rsmd = rs.getMetaData();
