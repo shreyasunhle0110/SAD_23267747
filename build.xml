@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="securityProject" default="jar" basedir=".">
+    <description>Builds, tests, and runs the project securityProject.</description>
+    <import file="nbproject/build-impl.xml"/>
+
+    <!-- Define properties -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="main.class" value="mainlibrary.MainLibrary"/>
+
+    <!-- Clean build and dist directories -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- Compile sources -->
+    <target name="compile">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+    </target>
+
+    <!-- Create JAR with MySQL connector in Class-Path -->
+    <target name="jar" depends="compile">
+        <mkdir dir="${dist.dir}"/>
+        <!-- Create dist/lib directory -->
+        <mkdir dir="${dist.dir}/lib"/>
+        <!-- Copy MySQL connector JAR to dist/lib -->
+        <copy file="mysql-connector-j-9.3.0.jar" todir="${dist.dir}/lib"/>
+        <!-- Generate manifest with Class-Path entry -->
+        <jar destfile="${dist.dir}/securityProject.jar" basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+                <attribute name="Class-Path" value="lib/mysql-connector-j-9.3.0.jar"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Run the project -->
+    <target name="run" depends="compile">
+        <java classname="${main.class}" fork="true">
+            <jvmarg value="-Dhttp.proxyHost=localhost"/>
+            <jvmarg value="-Dhttp.proxyPort=8080"/>
+            <jvmarg value="-Dhttps.proxyHost=localhost"/>
+            <jvmarg value="-Dhttps.proxyPort=8080"/>
+            <classpath>
+                <path refid="run.classpath"/>
+            </classpath>
+        </java>
+    </target>
+</project>
