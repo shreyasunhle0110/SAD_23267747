@@ -17,7 +17,7 @@ import java.util.Properties;
 public class DB {
 
     public static String user = "NCI_SAD";
-    public static String connection = "jdbc:mysql://localhost:3306/library?autoReconnect=true&useSSL=false";
+    public static String connection = "jdbc:mysql://host.docker.internal:3306/library?autoReconnect=true&useSSL=false";
     
     public static Connection getConnection() {
         Connection con = null;
