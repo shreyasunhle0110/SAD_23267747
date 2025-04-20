@@ -181,40 +181,27 @@ public class ReturnBookForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+        try {
+            int bookId = Integer.parseInt(BookID.getText());
+            int userId = Integer.parseInt(UserID.getText());
 
-        int BookIDV;
-        BookIDV = Integer.parseInt(BookID.getText());
-        int UserIDV;
-        UserIDV = Integer.parseInt(UserID.getText());
-
-        String IFDate = IYear.getText() + "-" + IMonth.getText() + "-" + IDate.getText();
-        System.out.println(IFDate);
-
-        //Date IFDDate = cal.getDate();
-        if (TransBookDao.BookValidate(BookID.getText()) && TransBookDao.UserValidate(UserID.getText())) {
-            if (TransBookDao.CheckIssuedBook(BookIDV)) {
-
-                if (TransBookDao.ReturnBook(BookIDV, UserIDV) != 0) {
-                    JOptionPane.showMessageDialog(ReturnBookForm.this, "Book is returned by the User!", "Returning Book Successfull!", JOptionPane.ERROR_MESSAGE);
-                    UserID.setText("");
-                    BookID.setText("");
+            if (TransBookDao.BookValidate(bookId) && TransBookDao.UserValidate(userId)) {
+                if (TransBookDao.CheckIssuedBook(bookId)) {
+                    if (TransBookDao.ReturnBook(bookId, userId) != 0) {
+                        JOptionPane.showMessageDialog(this, "The book has been returned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        UserID.setText("");
+                        BookID.setText("");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Unable to return the book.", "Return Error!", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(ReturnBookForm.this, "Unable to Return Book!", "Returning Book Error!", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "The book is not issued to this user.", "Return Error!", JOptionPane.ERROR_MESSAGE);
                 }
-
             } else {
-                JOptionPane.showMessageDialog(ReturnBookForm.this, "The Book  is NOT Issued by THIS User!", "Issuing Book Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid Book ID or User ID.", "Validation Error!", JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            if (TransBookDao.UserValidate(UserID.getText())) {
-                JOptionPane.showMessageDialog(ReturnBookForm.this, "The Book  is NOT available in Library Database!", "Returning Book Error!", JOptionPane.ERROR_MESSAGE);
-            } else if (TransBookDao.BookValidate(BookID.getText())) {
-                JOptionPane.showMessageDialog(ReturnBookForm.this, "The User is NOT available in Library Database!", "Returning Book Error!", JOptionPane.ERROR_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(ReturnBookForm.this, "The Book  and User are NOT available in Library Database!", "Returning Book Error!", JOptionPane.ERROR_MESSAGE);
-            }
-
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Book ID and User ID.", "Input Error!", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

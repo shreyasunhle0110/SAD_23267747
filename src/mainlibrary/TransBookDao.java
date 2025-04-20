@@ -20,11 +20,11 @@ public class TransBookDao {
         return status;
     }
 
-    public static boolean BookValidate(String BookID) {
+    public static boolean BookValidate(int BookID) {
         boolean status = false;
         try (Connection con = DB.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM Books WHERE BookID = ?");
-            ps.setString(1, BookID);
+            ps.setInt(1, BookID);
             ResultSet rs = ps.executeQuery();
             status = rs.next();
             con.close();
