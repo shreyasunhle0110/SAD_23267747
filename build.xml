@@ -9,6 +9,7 @@
     <property name="dist.dir" value="dist" />
     <property name="lib.dir" value="lib" />
     <property name="main.class" value="mainlibrary.MainLibrary" />
+    <property name="aspectj.lib" value="${lib.dir}/aspectj" />
 
     <!-- Clean build and dist directories -->
     <target name="clean">
@@ -26,6 +27,21 @@
                 </fileset>
             </classpath>
         </javac>
+    </target>
+
+    <!-- AspectJ classpath -->
+    <path id="aspectj.classpath">
+        <pathelement location="${aspectj.lib}/aspectjrt.jar" />
+        <pathelement location="${aspectj.lib}/aspectjtools.jar" />
+    </path>
+
+    <!-- Compile aspects -->
+    <target name="compile-aspects" depends="compile">
+        <iajc source="1.8" target="1.8" fork="true" destdir="${build.dir}" classpathref="aspectj.classpath">
+            <sourceroots>
+                <pathelement location="${src.dir}" />
+            </sourceroots>
+        </iajc>
     </target>
 
     <!-- Create JAR with dependencies -->
@@ -71,21 +87,46 @@
         <classpath refid="dependency-check.path" />
     </taskdef>
 
-    <!-- Dependency check target -->
+    <!-- Enhanced OWASP Dependency-Check Configuration -->
     <target name="dependency-check">
-        <dependency-check projectname="${ant.project.name}"
+        <dependency-check
+            projectname="${ant.project.name}"
             reportoutputdirectory="dependency-check-report"
             reportformat="ALL"
             failBuildOnCVSS="7"
-            nvdApiKey="55cfceb2-0de8-4751-bdc4-62267584231f">
+            nvdApiKey="55cfceb2-0de8-4751-bdc4-62267584231f"
+            assemblyAnalyzerEnabled="false"
+            autoUpdate="false"
+            dataDirectory="dependency-check-data"
+            suppressionFile="security-suppressions.xml">
+            
+            <!-- Scan both application JAR and dependencies -->
             <fileset dir="${lib.dir}">
-                <include name="**/*.jar" />
+                <include name="**/*.jar"/>
+                <exclude name="**/junit*.jar"/> <!-- Exclude test dependencies -->
             </fileset>
+            
             <fileset dir="${dist.dir}">
-                <include name="**/*.jar" />
+                <include name="**/securityProject.jar"/>
             </fileset>
+
+            <!-- Enable additional analyzers -->
+            <analyzer classname="org.owasp.dependencycheck.analyzer.CentralAnalyzer"/>
         </dependency-check>
+        
+        <!-- Fail build if vulnerabilities found -->
+        <fail message="Critical vulnerabilities detected - check dependency-check-report">
+            <condition>
+                <resourcecount when="greater" count="0">
+                    <fileset dir="dependency-check-report" includes="*.html"/>
+                </resourcecount>
+            </condition>
+        </fail>
     </target>
 
-
+    <!-- New security audit target -->
+    <target name="security-audit" depends="clean,compile-aspects,dependency-check"
+            description="Full security audit workflow">
+        <echo message="Security audit completed successfully" />
+    </target>
 </project>

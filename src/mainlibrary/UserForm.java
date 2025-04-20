@@ -243,7 +243,7 @@ public class UserForm extends javax.swing.JFrame {
             Date = RYear + "-" + RMonth + "-" + RDate;
 
             if (UsersDao.AddUser(User, UserPass, UserEmail, Date) != 0) {
-                JOptionPane.showMessageDialog(UserForm.this, "User is Added Successfully!", "Adding New User!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(UserForm.this, "User is Added Successfully!", "Adding New User!", JOptionPane.INFORMATION_MESSAGE);
                 UserName.setText("");
                 Password.setText("");
                 Email.setText("");

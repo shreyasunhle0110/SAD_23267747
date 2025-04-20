@@ -6,7 +6,9 @@
 package mainlibrary;
 
 import java.util.Calendar;
+import java.util.Optional;
 import javax.swing.JOptionPane;
+import javax.xml.bind.ValidationException; // Ensure this import exists
 
 /**
  *
@@ -182,26 +184,46 @@ public class ReturnBookForm extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
-            int bookId = Integer.parseInt(BookID.getText());
-            int userId = Integer.parseInt(UserID.getText());
+            // Validate inputs
+            String bookIdInput = BookID.getText();
+            String userIdInput = UserID.getText();
+            if (!bookIdInput.matches("\\d+") || !userIdInput.matches("\\d+")) {
+                throw new ValidationException("Invalid Book ID or User ID format.");
+            }
 
-            if (TransBookDao.BookValidate(bookId) && TransBookDao.UserValidate(userId)) {
-                if (TransBookDao.CheckIssuedBook(bookId)) {
-                    if (TransBookDao.ReturnBook(bookId, userId) != 0) {
-                        JOptionPane.showMessageDialog(this, "The book has been returned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            int bookId = Integer.parseInt(bookIdInput);
+            int userId = Integer.parseInt(userIdInput);
+
+            // Check if book and user are valid
+            Optional<Boolean> isBookValid = TransBookDao.bookValidate(bookId);
+            Optional<Boolean> isUserValid = TransBookDao.userValidate(userId);
+
+            if (isBookValid.orElse(false) && isUserValid.orElse(false)) {
+                Optional<Boolean> isIssued = TransBookDao.checkIssuedBook(bookId);
+                if (isIssued.orElse(false)) {
+                    Optional<Integer> returnResult = TransBookDao.returnBook(bookId, userId);
+                    if (returnResult.isPresent() && returnResult.get() > 0) {
+                        JOptionPane.showMessageDialog(this, "The book has been returned successfully!", "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
                         UserID.setText("");
                         BookID.setText("");
                     } else {
-                        JOptionPane.showMessageDialog(this, "Unable to return the book.", "Return Error!", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Unable to return the book.", "Return Error!",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, "The book is not issued to this user.", "Return Error!", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "The book is not issued to this user.", "Return Error!",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid Book ID or User ID.", "Validation Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid Book ID or User ID.", "Validation Error!",
+                        JOptionPane.ERROR_MESSAGE);
             }
+        } catch (ValidationException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Validation Error!", JOptionPane.ERROR_MESSAGE);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Book ID and User ID.", "Input Error!", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Book ID and User ID.",
+                    "Input Error!", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

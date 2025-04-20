@@ -1,85 +1,94 @@
 package mainlibrary;
 
 import java.sql.*;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.List;
 import javax.swing.JTextField;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * DAO class for handling book transactions.
+ */
 public class TransBookDao {
     private static final Logger logger = LogManager.getLogger(TransBookDao.class);
 
-    public static boolean checkBook(String bookcallno) {
-        boolean status = false;
-        try {
-            Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT quantity, issued FROM books WHERE callno = ?");
+    public static Optional<Boolean> checkBook(String bookcallno) {
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT quantity, issued FROM books WHERE callno = ?")) {
             ps.setString(1, bookcallno);
-            ResultSet rs = ps.executeQuery();
-            status = rs.next();
-            con.close();
+            try (ResultSet rs = ps.executeQuery()) {
+                return Optional.of(rs.next());
+            }
         } catch (Exception e) {
             logger.error("Error during book check: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
     /**
      * Validates if a book exists in the database.
      * 
      * @param bookId The ID of the book to validate.
-     * @return True if the book exists, false otherwise.
+     * @return Optional<Boolean> indicating if the book exists.
      * @throws IllegalArgumentException If the bookId is invalid.
      * @see <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20: Improper Input Validation</a>
      */
-    public static boolean bookValidate(int bookId) {
-        if (!String.valueOf(bookId).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid BookID: Must be numeric.");
+    public static Optional<Boolean> bookValidate(int bookId) {
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("Invalid BookID: Must be positive.");
         }
-        boolean status = false;
-        String query = "SELECT * FROM Books WHERE BookID = ?";
+        String query = "SELECT 1 FROM Books WHERE BookID = ?";
         try (Connection con = DB.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, bookId);
             try (ResultSet rs = ps.executeQuery()) {
-                status = rs.next();
+                return Optional.of(rs.next());
             }
         } catch (SQLException e) {
             logger.error("Error during book validation: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
-    public static boolean UserValidate(int userId) {
-        if (!String.valueOf(userId).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid UserID: Must be numeric.");
+    /**
+     * Validates if a user exists in the database.
+     * 
+     * @param userId The ID of the user to validate.
+     * @return Optional<Boolean> indicating if the user exists.
+     * @throws IllegalArgumentException If the userId is invalid.
+     * @see <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20: Improper Input Validation</a>
+     */
+    public static Optional<Boolean> userValidate(int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid UserID: Must be positive.");
         }
-        boolean status = false;
-        try (Connection con = DB.getConnection()) {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM Users WHERE UserID = ?");
+        String query = "SELECT 1 FROM Users WHERE UserID = ?";
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-            status = rs.next();
-            con.close();
-        } catch (Exception e) {
+            try (ResultSet rs = ps.executeQuery()) {
+                return Optional.of(rs.next());
+            }
+        } catch (SQLException e) {
             logger.error("Error during user validation: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
-    public static int updatebook(String callno, int quantity, int issued) {
-        int status = 0;
-        try {
-            Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("UPDATE books SET quantity = ?, issued = ? WHERE callno = ?");
+    public static Optional<Integer> updateBook(String callno, int quantity, int issued) {
+        String query = "UPDATE books SET quantity = ?, issued = ? WHERE callno = ?";
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, quantity);
             ps.setInt(2, issued);
             ps.setString(3, callno);
-            status = ps.executeUpdate();
-            con.close();
+            return Optional.of(ps.executeUpdate());
         } catch (Exception e) {
             logger.error("Error during book update: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
     /**
@@ -93,11 +102,10 @@ public class TransBookDao {
      * @throws IllegalArgumentException If the input is invalid.
      * @see <a href="https://cwe.mitre.org/data/definitions/89.html">CWE-89: SQL Injection</a>
      */
-    public static int issueBook(int bookId, int userId, Date issueDate, Date returnDate) {
-        if (!String.valueOf(bookId).matches("\\d+") || !String.valueOf(userId).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid BookID or UserID: Must be numeric.");
+    public static Optional<Integer> issueBook(int bookId, int userId, Date issueDate, Date returnDate) {
+        if (bookId <= 0 || userId <= 0) {
+            throw new IllegalArgumentException("Invalid BookID or UserID: Must be positive.");
         }
-        int status = 0;
         String query = "INSERT INTO IssuedBook VALUES (?, ?, ?, ?)";
         try (Connection con = DB.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
@@ -105,68 +113,81 @@ public class TransBookDao {
             ps.setInt(2, userId);
             ps.setDate(3, issueDate);
             ps.setDate(4, returnDate);
-            status = ps.executeUpdate();
+            return Optional.of(ps.executeUpdate());
         } catch (SQLException e) {
             logger.error("Error during book issuance: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
-    public static int ReturnBook(int bookId, int userId) {
-        if (!String.valueOf(bookId).matches("\\d+") || !String.valueOf(userId).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid BookID or UserID: Must be numeric.");
+    /**
+     * Returns a book by deleting its record from IssuedBook.
+     * 
+     * @param bookId The ID of the book to return.
+     * @param userId The ID of the user returning the book.
+     * @return Optional<Integer> indicating the number of rows affected.
+     * @throws IllegalArgumentException If the bookId or userId is invalid.
+     * @see <a href="https://cwe.mitre.org/data/definitions/89.html">CWE-89: SQL Injection</a>
+     */
+    public static Optional<Integer> returnBook(int bookId, int userId) {
+        if (bookId <= 0 || userId <= 0) {
+            throw new IllegalArgumentException("Invalid BookID or UserID: Must be positive.");
         }
-        int status = 0;
-        try {
-            Connection con = DB.getConnection();
-            PreparedStatement ps = con.prepareStatement("DELETE FROM IssuedBook WHERE BookID = ? AND UserID = ?");
+        String query = "DELETE FROM IssuedBook WHERE BookID = ? AND UserID = ?";
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, bookId);
             ps.setInt(2, userId);
-            status = ps.executeUpdate();
-            con.close();
-        } catch (Exception e) {
+            return Optional.of(ps.executeUpdate());
+        } catch (SQLException e) {
             logger.error("Error during book return: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
-    public static boolean CheckIssuedBook(int bookId) {
-        if (!String.valueOf(bookId).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid BookID: Must be numeric.");
+    /**
+     * Checks if a book is issued.
+     * 
+     * @param bookId The ID of the book to check.
+     * @return Optional<Boolean> indicating if the book is issued.
+     * @throws IllegalArgumentException If the bookId is invalid.
+     * @see <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20: Improper Input Validation</a>
+     */
+    public static Optional<Boolean> checkIssuedBook(int bookId) {
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("Invalid BookID: Must be positive.");
         }
-        boolean status = false;
-        try (Connection con = DB.getConnection()) {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM IssuedBook WHERE BookID = ?");
+        String query = "SELECT 1 FROM IssuedBook WHERE BookID = ?";
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
             ps.setInt(1, bookId);
-            ResultSet rs = ps.executeQuery();
-            status = rs.next();
-            con.close();
-        } catch (Exception e) {
+            try (ResultSet rs = ps.executeQuery()) {
+                return Optional.of(rs.next());
+            }
+        } catch (SQLException e) {
             logger.error("Error during issued book check: {}", e.getMessage());
+            return Optional.empty();
         }
-        return status;
     }
 
-    public static int Check(int UserID) {
-        if (!String.valueOf(UserID).matches("\\d+")) {
-            throw new IllegalArgumentException("Invalid UserID: Must be numeric.");
+    public static Optional<Integer> check(int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid UserID: Must be positive.");
         }
-        boolean status = false;
-        int num = 0;
-        try (Connection con = DB.getConnection()) {
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM Book_Count UserID = ?");
-            ps.setInt(2, UserID);
-            ResultSet rs = ps.executeQuery();
-            status = rs.next();
-            num = rs.getInt("BookNo");
-            con.close();
+        String query = "SELECT BookNo FROM Book_Count WHERE UserID = ?";
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int bookCount = rs.getInt("BookNo");
+                    return Optional.of(bookCount == 5 ? 0 : 1);
+                }
+                return Optional.of(1);
+            }
         } catch (Exception e) {
             logger.error("Error during book count check: {}", e.getMessage());
-        }
-        if (num == 5) {
-            return 0;
-        } else {
-            return 1;
+            return Optional.empty();
         }
     }
 }

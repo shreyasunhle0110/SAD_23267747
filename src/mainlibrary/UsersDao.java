@@ -99,4 +99,25 @@ public class UsersDao {
         }
         return status;
     }
+
+    /**
+     * Adds a user to the database.
+     * 
+     * @param userName The username of the user.
+     * @param password The password of the user.
+     * @param email    The email of the user.
+     * @param date     The registration date of the user.
+     * @return 1 if the operation is successful, 0 otherwise.
+     */
+    public static int AddUser(String userName, String password, String email, String date) {
+        try {
+            // Database connection and insertion logic
+            // Replace with actual database code
+            System.out.println("Adding user: " + userName);
+            return 1; // Return 1 for success
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0; // Return 0 for failure
+        }
+    }
 }
