@@ -10,18 +10,18 @@ Security Issues and Recommendations
 2. SQL Injection Vulnerabilities
 --------------------------------
 - Issue: SQL queries are constructed using string concatenation.
-- Fix: Prepared statements are now used to prevent SQL injection.
+- Fix: Replaced concatenated SQL queries with PreparedStatement in all DAO classes.
 
 3. Weak Password Storage
 ------------------------
 - Issue: Passwords are stored in plain text in the database.
-- Fix: Passwords are now hashed using bcrypt before storing them.
+- Fix: Passwords are now hashed using bcrypt before storing them in the database.
 
 4. Missing Input Validation
 ---------------------------
 - Issue: User inputs are not validated before processing.
 - Risk: This can lead to injection attacks or unexpected behavior.
-- Fix: Validate and sanitize all user inputs to ensure they meet expected formats.
+- Fix: Added regex checks for numeric-only fields like BookID and UserID.
 
 5. Hardcoded Cryptographic Secrets
 -----------------------------------
@@ -69,7 +69,7 @@ Security Issues and Recommendations
 ----------------------------------
 - Issue: There is no evidence of logging or monitoring for security events.
 - Risk: Security incidents may go undetected.
-- Fix: Implement logging for critical actions and monitor logs for suspicious activity.
+- Fix: Added sanitized logging using Log4j2 for critical database operations.
 
 13. Use of Deprecated Libraries
 -------------------------------

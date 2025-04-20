@@ -1,47 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="securityProject" default="jar" basedir=".">
     <description>Builds, tests, and runs the project securityProject.</description>
-    <import file="nbproject/build-impl.xml"/>
+    <import file="nbproject/build-impl.xml" />
 
     <!-- Define properties -->
-    <property name="src.dir" value="src"/>
-    <property name="build.dir" value="build"/>
-    <property name="dist.dir" value="dist"/>
-    <property name="lib.dir" value="lib"/>
-    <property name="main.class" value="mainlibrary.MainLibrary"/>
+    <property name="src.dir" value="src" />
+    <property name="build.dir" value="build" />
+    <property name="dist.dir" value="dist" />
+    <property name="lib.dir" value="lib" />
+    <property name="main.class" value="mainlibrary.MainLibrary" />
 
     <!-- Clean build and dist directories -->
     <target name="clean">
-        <delete dir="${build.dir}"/>
-        <delete dir="${dist.dir}"/>
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
     </target>
 
     <!-- Compile sources -->
     <target name="compile">
-        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.dir}" />
         <javac srcdir="${src.dir}" destdir="${build.dir}">
             <classpath>
                 <fileset dir="${lib.dir}">
-                    <include name="*.jar"/>
+                    <include name="*.jar" />
                 </fileset>
             </classpath>
         </javac>
     </target>
 
-    <!-- Create JAR with MySQL connector and jBCrypt in Class-Path -->
+    <!-- Create JAR with dependencies -->
     <target name="jar" depends="compile">
-        <mkdir dir="${dist.dir}"/>
-        <!-- Create dist/lib directory -->
-        <mkdir dir="${dist.dir}/lib"/>
-        <!-- Copy MySQL connector JAR to dist/lib -->
-        <copy file="lib/mysql-connector-j-9.3.0.jar" todir="${dist.dir}/lib"/>
-        <!-- Copy jBCrypt JAR to dist/lib -->
-        <copy file="lib/jBCrypt-0.4.jar" todir="${dist.dir}/lib"/>
-        <!-- Generate manifest with Class-Path entry -->
+        <mkdir dir="${dist.dir}" />
+        <mkdir dir="${dist.dir}/lib" />
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="${lib.dir}">
+                <include name="*.jar" />
+            </fileset>
+        </copy>
         <jar destfile="${dist.dir}/securityProject.jar" basedir="${build.dir}">
             <manifest>
-                <attribute name="Main-Class" value="${main.class}"/>
-                <attribute name="Class-Path" value="lib/mysql-connector-j-9.3.0.jar lib/jBCrypt-0.4.jar"/>
+                <attribute name="Main-Class" value="${main.class}" />
+                <attribute name="Class-Path" value="lib/" />
             </manifest>
         </jar>
     </target>
@@ -49,16 +48,44 @@
     <!-- Run the project -->
     <target name="run" depends="compile">
         <java classname="${main.class}" fork="true">
-            <jvmarg value="-Dhttp.proxyHost=localhost"/>
-            <jvmarg value="-Dhttp.proxyPort=8080"/>
-            <jvmarg value="-Dhttps.proxyHost=localhost"/>
-            <jvmarg value="-Dhttps.proxyPort=8080"/>
             <classpath>
-                <path refid="run.classpath"/>
+                <path refid="run.classpath" />
                 <fileset dir="${lib.dir}">
-                    <include name="*.jar"/>
+                    <include name="*.jar" />
                 </fileset>
             </classpath>
         </java>
     </target>
+
+    <!-- OWASP Dependency-Check setup -->
+    <property name="dependency-check.home" value="${lib.dir}/dependency-check" />
+
+    <path id="dependency-check.path">
+        <pathelement location="${dependency-check.home}/dependency-check-ant.jar" />
+        <fileset dir="${dependency-check.home}/lib">
+            <include name="*.jar" />
+        </fileset>
+    </path>
+
+    <taskdef resource="dependency-check-taskdefs.properties">
+        <classpath refid="dependency-check.path" />
+    </taskdef>
+
+    <!-- Dependency check target -->
+    <target name="dependency-check">
+        <dependency-check projectname="${ant.project.name}"
+            reportoutputdirectory="dependency-check-report"
+            reportformat="ALL"
+            failBuildOnCVSS="7"
+            nvdApiKey="55cfceb2-0de8-4751-bdc4-62267584231f">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar" />
+            </fileset>
+            <fileset dir="${dist.dir}">
+                <include name="**/*.jar" />
+            </fileset>
+        </dependency-check>
+    </target>
+
+
 </project>

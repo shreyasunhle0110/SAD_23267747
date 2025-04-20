@@ -11,6 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.mindrot.jbcrypt.BCrypt;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Data Access Object for user-related operations.
@@ -19,14 +21,17 @@ import org.mindrot.jbcrypt.BCrypt;
  * @author bikash
  */
 public class UsersDao {
+    private static final Logger logger = LogManager.getLogger(UsersDao.class);
 
     /**
      * Validates a user's credentials by comparing the provided password
      * with the hashed password stored in the database.
-     *
+     * 
      * @param name     The username to validate.
      * @param password The password to validate.
      * @return True if the credentials are valid, false otherwise.
+     * @throws SQLException If a database access error occurs.
+     * @see <a href="https://cwe.mitre.org/data/definitions/89.html">CWE-89: SQL Injection</a>
      */
     public static boolean validate(String name, String password) {
         boolean status = false;
@@ -41,7 +46,7 @@ public class UsersDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error during user validation: " + e.getMessage());
+            logger.error("Error during user validation: {}", e.getMessage());
         }
         return status;
     }
@@ -69,14 +74,16 @@ public class UsersDao {
 
     /**
      * Adds a new user to the database with a hashed password.
-     *
+     * 
      * @param user      The username of the new user.
      * @param userPass  The plaintext password of the new user.
      * @param userEmail The email of the new user.
      * @param date      The registration date of the new user.
      * @return The number of rows affected by the insert operation.
+     * @throws SQLException If a database access error occurs.
+     * @see <a href="https://cwe.mitre.org/data/definitions/256.html">CWE-256: Plaintext Storage of Passwords</a>
      */
-    public static int AddUser(String user, String userPass, String userEmail, String date) {
+    public static int addUser(String user, String userPass, String userEmail, String date) {
         int status = 0;
         String query = "INSERT INTO Users (UserName, UserPass, Email, RegDate) VALUES (?, ?, ?, ?)";
         try (Connection con = DB.getConnection();
@@ -88,7 +95,7 @@ public class UsersDao {
             ps.setString(4, date);
             status = ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Error during user addition: " + e.getMessage());
+            logger.error("Error during user addition: {}", e.getMessage());
         }
         return status;
     }
