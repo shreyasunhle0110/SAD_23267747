@@ -17,11 +17,10 @@ import org.junit.jupiter.api.DisplayName;
 @DisplayName("IssueBookFormTest")
 public class IssueBookFormTest {
 
-    @Test
-    @DisplayName("Context Loads Test")
-    void contextLoads() {
+    public IssueBookFormTest() {
+        // Default constructor
     }
-
+    
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "1; DROP TABLE Users;--"})
     @DisplayName("Invalid Input Validation Test")

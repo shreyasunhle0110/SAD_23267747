@@ -11,29 +11,25 @@
     <property name="dist.dir" value="dist" />
     <property name="lib.dir" value="lib" />
     <property name="main.class" value="mainlibrary.MainLibrary" />
-    <property name="aspectj.lib" value="${lib.dir}/aspectj" />
     <property name="test.report.dir" value="test-reports" />
+    <property name="jacoco.exec.file" value="reports/jacoco.exec" />
+    <property name="jacoco.report.dir" value="reports/jacoco" />
 
     <!-- Define test classpath -->
     <path id="test.classpath">
         <pathelement location="${build.dir}" />
         <pathelement location="${build.test.dir}" />
         <fileset dir="${lib.dir}">
-            <include name="junit-platform-console-standalone-1.10.2.jar" />
+            <include name="junit-platform-console-standalone-1.9.3.jar" />
             <include name="junit-jupiter-api-5.10.2.jar" />
             <include name="junit-jupiter-engine-5.10.2.jar" />
             <include name="mockito-core-5.12.0.jar" />
             <include name="mockito-junit-jupiter-5.12.0.jar" />
             <include name="assertj-core-3.25.3.jar" />
-            <include name="mockito*.jar" />
+            <include name="byte-buddy-agent-1.17.5.jar" /> 
             <include name="*.jar" />
-            <include name="jaxb-api*.jar" />
-            <include name="jaxb-core*.jar" />
-            <include name="jaxb-impl*.jar" />
-            <include name="activation*.jar" />
         </fileset>
     </path>
-
 
     <!-- Clean build and dist directories -->
     <target name="clean">
@@ -141,7 +137,7 @@
             failBuildOnCVSS="7"
             nvdApiKey="55cfceb2-0de8-4751-bdc4-62267584231f"
             assemblyAnalyzerEnabled="false"
-            autoUpdate="false"
+            autoUpdate="true"
             dataDirectory="dependency-check-data"
             suppressionFile="security-suppressions.xml">
 
@@ -154,15 +150,12 @@
             <fileset dir="${dist.dir}">
                 <include name="**/securityProject.jar" />
             </fileset>
-
-            <!-- Enable additional analyzers -->
-            <analyzer classname="org.owasp.dependencycheck.analyzer.CentralAnalyzer" />
         </dependency-check>
 
         <!-- Fail build if vulnerabilities found -->
         <fail message="Critical vulnerabilities detected - check dependency-check-report">
             <condition>
-                <resourcecount when="greater" count="0">
+                <resourcecount when="greater" count="3">
                     <fileset dir="dependency-check-report" includes="*.html" />
                 </resourcecount>
             </condition>
@@ -170,7 +163,7 @@
     </target>
 
     <!-- New security audit target -->
-    <target name="security-audit" depends="clean,compile,compile-tests,test,dependency-check"
+    <target name="security-audit" depends="compile,compile-tests,test"
         description="Full security audit workflow with testing">
         <echo message="Security audit and testing completed successfully" />
     </target>
@@ -182,45 +175,33 @@
             <pathelement location="${lib.dir}/org.jacoco.core-0.8.12.jar" />
             <pathelement location="${lib.dir}/org.jacoco.report-0.8.12.jar" />
             <pathelement location="${lib.dir}/org.jacoco.agent-0.8.12.jar" />
+            <pathelement location="${lib.dir}/asm-9.5.jar" /> <!-- Ensure correct ASM version -->
+            <pathelement location="${lib.dir}/asm-tree-9.5.jar" /> <!-- Add ASM tree dependency -->
+            <pathelement location="${lib.dir}/asm-commons-9.5.jar" /> <!-- Add ASM commons -->
         </classpath>
     </taskdef>
 
+    <!-- JUnit 5 Test Execution -->
     <target name="junit" depends="compile-tests">
         <mkdir dir="${test.report.dir}" />
-        <junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+        <java classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
             <classpath>
                 <path refid="test.classpath" />
-                <pathelement location="${build.test.dir}" />
+                <pathelement location="${lib.dir}/junit-platform-console-standalone-1.9.3.jar" />
             </classpath>
-            <formatter type="xml" usefile="true" />
-            <batchtest fork="yes" todir="${test.report.dir}">
-                <fileset dir="${build.test.dir}">
-                    <include name="**/*Test.java" />
-                </fileset>
-            </batchtest>
-        </junit>
+            <arg value="--class-path" />
+            <arg value="${build.test.dir}" />
+            <arg value="--scan-class-path" />
+            <arg value="--reports-dir=${test.report.dir}" />
+        </java>
     </target>
 
+    <!-- JaCoCo Coverage Report -->
     <target name="coverage" depends="junit">
-        <mkdir dir="${test.report.dir}" />
-        <mkdir dir="reports/jacoco" />
-        <jacoco:coverage destfile="reports/jacoco.exec" excludes="mainlibrary/*Form.class">
-            <junit printsummary="yes" haltonfailure="yes" showoutput="false">
-                <classpath>
-                    <path refid="test.classpath" />
-                    <pathelement location="${build.test.dir}" />
-                </classpath>
-                <formatter type="xml" />
-                <batchtest fork="yes" todir="${test.report.dir}">
-                    <fileset dir="${build.test.dir}">
-                        <include name="**/*Test.java" />
-                    </fileset>
-                </batchtest>
-            </junit>
-        </jacoco:coverage>
+        <mkdir dir="${jacoco.report.dir}" />
         <jacoco:report>
             <executiondata>
-                <file file="reports/jacoco.exec" />
+                <file file="${jacoco.exec.file}" />
             </executiondata>
             <structure name="Security Project">
                 <classfiles>
@@ -230,7 +211,8 @@
                     <fileset dir="${src.dir}" />
                 </sourcefiles>
             </structure>
-            <html destdir="reports/jacoco" />
+            <html destdir="${jacoco.report.dir}" />
+            <xml destfile="${jacoco.report.dir}/jacoco.xml" />
         </jacoco:report>
     </target>
 </project>

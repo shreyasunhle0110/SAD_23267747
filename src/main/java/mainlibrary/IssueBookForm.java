@@ -13,6 +13,8 @@ import java.text.SimpleDateFormat;
 import org.apache.commons.validator.routines.IntegerValidator;
 import javax.xml.bind.ValidationException;
 import static mainlibrary.AppConstants.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 /**
  * IssueBookForm class for issuing books.
@@ -395,8 +397,11 @@ public class IssueBookForm extends javax.swing.JFrame {
      */
     public static void validateDate(String date) throws ValidationException {
         try {
-            java.sql.Date.valueOf(date);
-        } catch (IllegalArgumentException e) {
+            LocalDate parsedDate = LocalDate.parse(date);
+            if (parsedDate.isAfter(LocalDate.now())) {
+                throw new ValidationException("Invalid date");
+            }
+        } catch (DateTimeParseException e) {
             throw new ValidationException("Invalid date format");
         }
     }

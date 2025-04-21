@@ -1,6 +1,6 @@
-projectKey=SAD
+projectKey=Secure-Application-Dev
 serverUrl=http://localhost:9000
 serverVersion=25.4.0.105899
-dashboardUrl=http://localhost:9000/dashboard?id=SAD
-ceTaskId=d2177379-c18b-4ea8-8e1d-2b99079fba22
-ceTaskUrl=http://localhost:9000/api/ce/task?id=d2177379-c18b-4ea8-8e1d-2b99079fba22
+dashboardUrl=http://localhost:9000/dashboard?id=Secure-Application-Dev
+ceTaskId=40a3a074-ce1b-4f94-95cf-1092a4ca46ec
+ceTaskUrl=http://localhost:9000/api/ce/task?id=40a3a074-ce1b-4f94-95cf-1092a4ca46ec

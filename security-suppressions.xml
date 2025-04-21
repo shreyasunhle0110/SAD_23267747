@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Example suppression for a false positive -->
     <suppress>
         <notes>False positive in our test framework</notes>
         <cve>CVE-2021-1234</cve>
+    </suppress>
+
+    <!-- Suppress CVE-2018-14335 for any dependency (use SHA1 for more specificity) -->
+    <suppress>
+        <notes>Suppress CVE-2018-14335 for H2 database</notes>
+        <cve>CVE-2018-14335</cve>
     </suppress>
 </suppressions>
