@@ -1,32 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="securityProject" default="jar" basedir=".">
+<project name="securityProject" default="jar" basedir="." xmlns:jacoco="antlib:org.jacoco.ant">
     <description>Builds, tests, and runs the project securityProject.</description>
     <import file="nbproject/build-impl.xml" />
 
     <!-- Define properties -->
-    <property name="src.dir" value="src" />
+    <property name="src.dir" value="src/mainlibrary" />
+    <property name="test.dir" value="src/test/mainlibrary" />
     <property name="build.dir" value="build" />
+    <property name="build.test.dir" value="build/test/mainlibrary" />
     <property name="dist.dir" value="dist" />
     <property name="lib.dir" value="lib" />
     <property name="main.class" value="mainlibrary.MainLibrary" />
     <property name="aspectj.lib" value="${lib.dir}/aspectj" />
+    <property name="test.report.dir" value="test-reports" />
 
     <!-- Clean build and dist directories -->
     <target name="clean">
         <delete dir="${build.dir}" />
         <delete dir="${dist.dir}" />
+        <delete dir="${build.test.dir}" />
+        <delete dir="${test.report.dir}" />
     </target>
 
     <!-- Compile sources -->
     <target name="compile">
         <mkdir dir="${build.dir}" />
-        <javac srcdir="${src.dir}" destdir="${build.dir}">
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false">
             <classpath>
                 <fileset dir="${lib.dir}">
                     <include name="*.jar" />
                 </fileset>
             </classpath>
         </javac>
+    </target>
+
+    <!-- Compile test sources -->
+    <target name="compile-tests" depends="compile">
+        <mkdir dir="${build.test.dir}" />
+        <javac srcdir="${test.dir}" destdir="${build.test.dir}" includeantruntime="false">
+            <classpath refid="test.classpath" />
+        </javac>
+    </target>
+
+    <!-- Run JUnit tests -->
+    <target name="test" depends="compile-tests">
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" haltonfailure="yes" fork="true">
+            <classpath refid="test.classpath" />
+            <formatter type="plain" />
+            <batchtest fork="yes" todir="${test.report.dir}">
+                <fileset dir="${build.test.dir}">
+                    <include name="**/*Test.class" />
+                </fileset>
+            </batchtest>
+        </junit>
     </target>
 
     <!-- AspectJ classpath -->
@@ -37,7 +64,8 @@
 
     <!-- Compile aspects -->
     <target name="compile-aspects" depends="compile">
-        <iajc source="1.8" target="1.8" fork="true" destdir="${build.dir}" classpathref="aspectj.classpath">
+        <iajc source="1.8" target="1.8" fork="true" destdir="${build.dir}"
+            classpathref="aspectj.classpath">
             <sourceroots>
                 <pathelement location="${src.dir}" />
             </sourceroots>
@@ -99,34 +127,72 @@
             autoUpdate="false"
             dataDirectory="dependency-check-data"
             suppressionFile="security-suppressions.xml">
-            
+
             <!-- Scan both application JAR and dependencies -->
             <fileset dir="${lib.dir}">
-                <include name="**/*.jar"/>
-                <exclude name="**/junit*.jar"/> <!-- Exclude test dependencies -->
+                <include name="**/*.jar" />
+                <exclude name="**/junit*.jar" /> <!-- Exclude test dependencies -->
             </fileset>
-            
+
             <fileset dir="${dist.dir}">
-                <include name="**/securityProject.jar"/>
+                <include name="**/securityProject.jar" />
             </fileset>
 
             <!-- Enable additional analyzers -->
-            <analyzer classname="org.owasp.dependencycheck.analyzer.CentralAnalyzer"/>
+            <analyzer classname="org.owasp.dependencycheck.analyzer.CentralAnalyzer" />
         </dependency-check>
-        
+
         <!-- Fail build if vulnerabilities found -->
         <fail message="Critical vulnerabilities detected - check dependency-check-report">
             <condition>
                 <resourcecount when="greater" count="0">
-                    <fileset dir="dependency-check-report" includes="*.html"/>
+                    <fileset dir="dependency-check-report" includes="*.html" />
                 </resourcecount>
             </condition>
         </fail>
     </target>
 
     <!-- New security audit target -->
-    <target name="security-audit" depends="clean,compile-aspects,dependency-check"
-            description="Full security audit workflow">
-        <echo message="Security audit completed successfully" />
+    <target name="security-audit" depends="clean,compile,compile-tests,test,dependency-check"
+        description="Full security audit workflow with testing">
+        <echo message="Security audit and testing completed successfully" />
+    </target>
+
+    <!-- JaCoCo integration -->
+    <taskdef name="report" classname="org.jacoco.ant.ReportTask">
+        <classpath>
+            <pathelement location="lib/org.jacoco.ant-0.8.12.jar" />
+            <pathelement location="lib/org.jacoco.core-0.8.12.jar" />
+            <pathelement location="lib/org.jacoco.report-0.8.12.jar" />
+            <pathelement location="lib/org.jacoco.agent-0.8.12.jar" />
+        </classpath>
+    </taskdef>
+    <target name="coverage" depends="compile">
+        <jacoco:coverage destfile="build/jacoco.exec">
+            <junit printsummary="true" haltonfailure="true">
+                <classpath>
+                    <path refid="project.classpath" />
+                </classpath>
+                <batchtest>
+                    <fileset dir="src/test/java/mainlibrary">
+                        <include name="**/*Test.java" />
+                    </fileset>
+                </batchtest>
+            </junit>
+        </jacoco:coverage>
+        <jacoco:report>
+            <executiondata>
+                <file file="build/jacoco.exec" />
+            </executiondata>
+            <structure name="Project">
+                <classfiles>
+                    <fileset dir="build/classes" />
+                </classfiles>
+                <sourcefiles>
+                    <fileset dir="src/main/java" />
+                </sourcefiles>
+            </structure>
+            <html destdir="build/reports/jacoco" />
+        </jacoco:report>
     </target>
 </project>

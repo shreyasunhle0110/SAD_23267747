@@ -1,0 +1,6 @@
+projectKey=SAD
+serverUrl=http://localhost:9000
+serverVersion=25.4.0.105899
+dashboardUrl=http://localhost:9000/dashboard?id=SAD
+ceTaskId=11c9e899-e223-4a1e-98c9-89a36ea28d15
+ceTaskUrl=http://localhost:9000/api/ce/task?id=11c9e899-e223-4a1e-98c9-89a36ea28d15
