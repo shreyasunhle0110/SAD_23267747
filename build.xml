@@ -5,7 +5,7 @@
 
     <!-- Define properties -->
     <property name="src.dir" value="src/mainlibrary" />
-    <property name="test.dir" value="src/test/mainlibrary" />
+    <property name="test.dir" value="src/mainlibrary/test" />
     <property name="build.dir" value="build" />
     <property name="build.test.dir" value="build/test/mainlibrary" />
     <property name="dist.dir" value="dist" />
@@ -13,6 +13,24 @@
     <property name="main.class" value="mainlibrary.MainLibrary" />
     <property name="aspectj.lib" value="${lib.dir}/aspectj" />
     <property name="test.report.dir" value="test-reports" />
+
+    <!-- Define test classpath -->
+    <path id="test.classpath">
+        <pathelement location="${build.dir}"/>
+        <pathelement location="${build.test.dir}"/>
+        <fileset dir="${lib.dir}">
+            <include name="junit-platform-console-standalone-1.10.2.jar"/>
+            <include name="junit-jupiter*.jar"/>
+            <include name="assertj-core-*.jar"/>
+            <include name="mockito*.jar"/>
+            <include name="*.jar"/>
+            <include name="jaxb-api*.jar"/>
+            <include name="jaxb-core*.jar"/>
+            <include name="jaxb-impl*.jar"/>
+            <include name="activation*.jar"/>
+        </fileset>
+    </path>
+    
 
     <!-- Clean build and dist directories -->
     <target name="clean">
@@ -29,38 +47,14 @@
             <classpath>
                 <fileset dir="${lib.dir}">
                     <include name="*.jar" />
+                    <include name="jaxb-api*.jar"/>
+                    <include name="jaxb-core*.jar"/>
+                    <include name="jaxb-impl*.jar"/>
+                    <include name="activation*.jar"/>
                 </fileset>
             </classpath>
         </javac>
     </target>
-
-    <!-- Compile test sources -->
-    <target name="compile-tests" depends="compile">
-        <mkdir dir="${build.test.dir}" />
-        <javac srcdir="${test.dir}" destdir="${build.test.dir}" includeantruntime="false">
-            <classpath refid="test.classpath" />
-        </javac>
-    </target>
-
-    <!-- Run JUnit tests -->
-    <target name="test" depends="compile-tests">
-        <mkdir dir="${test.report.dir}" />
-        <junit printsummary="yes" haltonfailure="yes" fork="true">
-            <classpath refid="test.classpath" />
-            <formatter type="plain" />
-            <batchtest fork="yes" todir="${test.report.dir}">
-                <fileset dir="${build.test.dir}">
-                    <include name="**/*Test.class" />
-                </fileset>
-            </batchtest>
-        </junit>
-    </target>
-
-    <!-- AspectJ classpath -->
-    <path id="aspectj.classpath">
-        <pathelement location="${aspectj.lib}/aspectjrt.jar" />
-        <pathelement location="${aspectj.lib}/aspectjtools.jar" />
-    </path>
 
     <!-- Compile aspects -->
     <target name="compile-aspects" depends="compile">
@@ -72,6 +66,18 @@
         </iajc>
     </target>
 
+    <!-- Compile test sources -->
+    <target name="compile-tests" depends="compile">
+        <mkdir dir="${build.test.dir}" />
+        <javac srcdir="${test.dir}" destdir="${build.test.dir}" includeantruntime="false">
+            <classpath refid="test.classpath" />
+        </javac>
+    </target>
+
+    <!-- AspectJ classpath -->
+    <path id="aspectj.classpath"></path>
+    
+
     <!-- Create JAR with dependencies -->
     <target name="jar" depends="compile">
         <mkdir dir="${dist.dir}" />
@@ -79,6 +85,10 @@
         <copy todir="${dist.dir}/lib">
             <fileset dir="${lib.dir}">
                 <include name="*.jar" />
+                <include name="jaxb-api2.3.1.jar"/>
+                <include name="jaxb-core*.jar"/>
+                <include name="jaxb-impl*.jar"/>
+                <include name="activation*.jar"/>
             </fileset>
         </copy>
         <jar destfile="${dist.dir}/securityProject.jar" basedir="${build.dir}">
@@ -96,6 +106,10 @@
                 <path refid="run.classpath" />
                 <fileset dir="${lib.dir}">
                     <include name="*.jar" />
+                    <include name="jaxb-api*.jar"/>
+                    <include name="jaxb-core*.jar"/>
+                    <include name="jaxb-impl*.jar"/>
+                    <include name="activation*.jar"/>
                 </fileset>
             </classpath>
         </java>
@@ -158,41 +172,62 @@
         <echo message="Security audit and testing completed successfully" />
     </target>
 
-    <!-- JaCoCo integration -->
-    <taskdef name="report" classname="org.jacoco.ant.ReportTask">
+    <!-- JaCoCo Configuration -->
+    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
         <classpath>
-            <pathelement location="lib/org.jacoco.ant-0.8.12.jar" />
-            <pathelement location="lib/org.jacoco.core-0.8.12.jar" />
-            <pathelement location="lib/org.jacoco.report-0.8.12.jar" />
-            <pathelement location="lib/org.jacoco.agent-0.8.12.jar" />
+            <pathelement location="${lib.dir}/org.jacoco.ant-0.8.12.jar"/>
+            <pathelement location="${lib.dir}/org.jacoco.core-0.8.12.jar"/>
+            <pathelement location="${lib.dir}/org.jacoco.report-0.8.12.jar"/>
+            <pathelement location="${lib.dir}/org.jacoco.agent-0.8.12.jar"/>
         </classpath>
     </taskdef>
-    <target name="coverage" depends="compile">
-        <jacoco:coverage destfile="build/jacoco.exec">
-            <junit printsummary="true" haltonfailure="true">
+
+    <target name="junit" depends="compile-tests">
+        <mkdir dir="${test.report.dir}"/>
+        <junit printsummary="yes" haltonfailure="yes" showoutput="false">
+            <classpath>
+                <path refid="test.classpath" />
+                <pathelement location="${build.test.dir}" />
+            </classpath>
+            <formatter type="xml" usefile="true"/>
+            <batchtest fork="yes" todir="${test.report.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="coverage" depends="junit">
+        <mkdir dir="${test.report.dir}"/>
+        <mkdir dir="reports/jacoco" />
+        <jacoco:coverage destfile="reports/jacoco.exec" excludes="mainlibrary/*Form.class">
+            <junit printsummary="yes" haltonfailure="yes" showoutput="false">
                 <classpath>
-                    <path refid="project.classpath" />
+                    <path refid="test.classpath" />
+                    <pathelement location="${build.test.dir}" />
                 </classpath>
-                <batchtest>
-                    <fileset dir="src/test/java/mainlibrary">
-                        <include name="**/*Test.java" />
+                <formatter type="xml"/>
+                <batchtest fork="yes" todir="${test.report.dir}">
+                    <fileset dir="${test.dir}">
+                        <include name="**/*Test.java"/>
                     </fileset>
                 </batchtest>
             </junit>
         </jacoco:coverage>
         <jacoco:report>
             <executiondata>
-                <file file="build/jacoco.exec" />
+                <file file="reports/jacoco.exec" />
             </executiondata>
-            <structure name="Project">
+            <structure name="Security Project">
                 <classfiles>
-                    <fileset dir="build/classes" />
+                    <fileset dir="${build.dir}" />
                 </classfiles>
-                <sourcefiles>
-                    <fileset dir="src/main/java" />
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${src.dir}" />
                 </sourcefiles>
             </structure>
-            <html destdir="build/reports/jacoco" />
+            <html destdir="reports/jacoco" />
         </jacoco:report>
     </target>
 </project>

@@ -1,0 +1,62 @@
+# Build and output directories
+/build/
+/build.test/
+/dist/
+/test-reports/
+/reports/
+/dependency-check-report/
+/dependency-check-data/
+
+# IDE and project config
+nbproject/private/
+/nbproject/private/
+/.idea/
+/.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.user
+*.db
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Java class files
+*.class
+
+# JARs, WARs, and other archives (except versioned source jars if needed)
+/*.jar
+/*.war
+/*.ear
+/lib/
+
+# Jacoco coverage
+jacoco.exec
+
+# Maven/Gradle
+/target/
+/out/
+/.gradle/
+/.mvn/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# NetBeans generated files
+nb-configuration.xml
+
+# Security suppressions (if generated)
+security-suppressions.xml
+
+# Auto-generated XML/HTML reports
+*.xml
+*.html
+
+# Exclude any other auto-generated files

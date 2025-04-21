@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.swing.JFrame;
+import static mainlibrary.AppConstants.*;
 
 /**
  * public static JFrame ThisLogined;
@@ -376,26 +377,21 @@ public class LibrarianSuccess extends javax.swing.JFrame {
         });
         String User = args[0];
         String Pass = args[1];
-        try {
-            Connection Con;
-            Con = DB.getConnection();
-            PreparedStatement ps;
-            ps = Con.prepareStatement("select * from Librarian where UserName=? and Password=?");
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement("select * from Librarian where UserName=? and Password=?")) {
             ps.setString(1, User);
             ps.setString(2, Pass);
-            ResultSet rs;
-            rs = ps.executeQuery();
-            boolean status = rs.next();
-            Name = rs.getString("FullName");
-            LibrarianID = rs.getString("LibrarianID");
-            Email = rs.getString("Email");
-            System.out.println(Name + " " + LibrarianID + " " + Email);
-            Con.close();
-
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Name = rs.getString("FullName");
+                    LibrarianID = rs.getString("LibrarianID");
+                    Email = rs.getString("Email");
+                    System.out.println(Name + " " + LibrarianID + " " + Email);
+                }
+            }
         } catch (Exception f) {
             System.out.println(f);
         }
-
     }
 
     /**
@@ -417,7 +413,7 @@ public class LibrarianSuccess extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
-    private static javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     // End of variables declaration//GEN-END:variables

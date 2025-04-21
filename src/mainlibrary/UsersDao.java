@@ -6,6 +6,8 @@
 package mainlibrary;
 
 import java.security.SecureRandom;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -72,52 +74,70 @@ public class UsersDao {
         return status;
     }
 
+    
+
     /**
-     * Adds a new user to the database with a hashed password.
+     * Adds a user to the database with hashed password.
      * 
-     * @param user      The username of the new user.
-     * @param userPass  The plaintext password of the new user.
-     * @param userEmail The email of the new user.
-     * @param date      The registration date of the new user.
-     * @return The number of rows affected by the insert operation.
+     * @param username The username of the user.
+     * @param password The plaintext password of the user.
+     * @param email    The email of the user.
+     * @param fullName The full name of the user.
+     * @return True if the operation is successful, false otherwise.
      * @throws SQLException If a database access error occurs.
-     * @see <a href="https://cwe.mitre.org/data/definitions/256.html">CWE-256: Plaintext Storage of Passwords</a>
      */
-    public static int addUser(String user, String userPass, String userEmail, String date) {
-        int status = 0;
-        String query = "INSERT INTO Users (UserName, UserPass, Email, RegDate) VALUES (?, ?, ?, ?)";
+    public static boolean addUser(String username, String password, String email, String fullName) throws SQLException {
+        String hashedPassword = hashPassword(password);
         try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(query)) {
-            String hashedPassword = BCrypt.hashpw(userPass, BCrypt.gensalt(12));
-            ps.setString(1, user);
+             PreparedStatement ps = con.prepareStatement("INSERT INTO Users (UserName, UserPass, Email, FullName) VALUES (?, ?, ?, ?)")) {
+            ps.setString(1, username);
             ps.setString(2, hashedPassword);
-            ps.setString(3, userEmail);
-            ps.setString(4, date);
-            status = ps.executeUpdate();
-        } catch (SQLException e) {
-            logger.error("Error during user addition: {}", e.getMessage());
+            ps.setString(3, email);
+            ps.setString(4, fullName);
+            return ps.executeUpdate() > 0;
         }
-        return status;
     }
 
     /**
-     * Adds a user to the database.
+     * Hashes a password using SHA-256.
      * 
-     * @param userName The username of the user.
-     * @param password The password of the user.
-     * @param email    The email of the user.
-     * @param date     The registration date of the user.
-     * @return 1 if the operation is successful, 0 otherwise.
+     * @param password The plaintext password to hash.
+     * @return The hashed password as a hexadecimal string.
      */
-    public static int AddUser(String userName, String password, String email, String date) {
+    public static String hashPassword(String password) {
         try {
-            // Database connection and insertion logic
-            // Replace with actual database code
-            System.out.println("Adding user: " + userName);
-            return 1; // Return 1 for success
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0; // Return 0 for failure
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing password", e);
+        }
+    }
+
+    /**
+     * Validates a user's credentials by comparing the provided password
+     * with the hashed password stored in the database.
+     * 
+     * @param username The username to validate.
+     * @param password The plaintext password to validate.
+     * @return True if the credentials are valid, false otherwise.
+     * @throws SQLException If a database access error occurs.
+     */
+    public static boolean validateUser(String username, String password) throws SQLException {
+        String hashedPassword = hashPassword(password);
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT * FROM Users WHERE UserName = ? AND UserPass = ?")) {
+            ps.setString(1, username);
+            ps.setString(2, hashedPassword);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         }
     }
 }

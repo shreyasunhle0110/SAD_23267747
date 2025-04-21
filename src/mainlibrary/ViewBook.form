@@ -90,7 +90,7 @@
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Ubuntu" size="24" style="0"/>
+          <Font name=AppConstants.UBUNTU size="24" style="0"/>
         </Property>
         <Property name="text" type="java.lang.String" value="Books"/>
       </Properties>

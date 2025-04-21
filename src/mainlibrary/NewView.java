@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
-
+import static mainlibrary.AppConstants.*;
 /**
  *
  * @author bikash
@@ -29,40 +29,27 @@ public class NewView extends javax.swing.JFrame {
      * Creates new form ViewBook
      *
      * @throws java.sql.SQLException
+     * @see <a href="https://cwe.mitre.org/data/definitions/404.html">CWE-404: Improper Resource Shutdown or Release</a>
      */
     public NewView() throws SQLException {
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
 
         initComponents();
         DefaultTableModel model;
         model = (DefaultTableModel) jTable1.getModel();
         // String Data[][]=null;
         //  String Column[]=null;
-        try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement(
-                "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
-                "FROM Books, IssuedBook " +
-                "WHERE Books.BookID = IssuedBook.BookID",
-                ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
-            );
-            ResultSet rs = ps.executeQuery();
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement(
+                 "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                 "FROM Books, IssuedBook " +
+                 "WHERE Books.BookID = IssuedBook.BookID",
+                 ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = ps.executeQuery()) {
 
             ResultSetMetaData rsmd = rs.getMetaData();
-
             int colnum = rsmd.getColumnCount();
 
-            /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
-                }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
             String Row[];
             Row = new String[colnum];
             while (rs.next()) {
@@ -71,9 +58,6 @@ public class NewView extends javax.swing.JFrame {
                 }
                 model.addRow(Row);
             }
-
-            //count++;
-            Con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -126,7 +110,7 @@ public class NewView extends javax.swing.JFrame {
         jTable1.setRowHeight(20);
         jScrollPane1.setViewportView(jTable1);
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 24)); // NOI18N
         jLabel1.setText("Issued Books");
 
         jButton1.setText("Close");
@@ -245,158 +229,80 @@ public class NewView extends javax.swing.JFrame {
     }//GEN-LAST:event_SearchFieldActionPerformed
 
     private void SearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SearchActionPerformed
-        // TODO add your handling code here:
-
-        DefaultTableModel model;
-        model = (DefaultTableModel) jTable1.getModel();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         while (model.getRowCount() > 0) {
             model.removeRow(model.getRowCount() - 1);
         }
+
         if (NameRadio.isSelected()) {
-            // String Data[][]=null;
-            //  String Column[]=null;
-            String Search = "%" + SearchField.getText() + "%";
-            try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement(
-                    "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
-                    "FROM Books, IssuedBook " +
-                    "WHERE Books.BookID = IssuedBook.BookID AND Books.BookName LIKE ?",
-                    ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
-                );
-                ps.setString(1, Search);
-                ResultSet rs = ps.executeQuery();
-
-                ResultSetMetaData rsmd = rs.getMetaData();
-
-                int colnum = rsmd.getColumnCount();
-
-                //code here
-                String Row[];
-                Row = new String[colnum];
-                while (rs.next()) {
-                    for (int i = 1; i <= colnum; i++) {
-                        Row[i - 1] = rs.getString(i);
-                    }
-                    model.addRow(Row);
-                }
-                int rowcount = model.getRowCount();
-                System.out.println(rowcount);
-                if (rowcount == 0) {
-                    String NoRow[];
-                    NoRow = new String[7];
-                    NoRow[1] = "NO";
-                    NoRow[2] = "RESULT";
-                    NoRow[0] = "";
-                    NoRow[3] = "";
-                    NoRow[4] = "";
-                    NoRow[5] = "";
-                    NoRow[6] = "";
-                    model.addRow(NoRow);
-
-                }
-
-                //count++;
-                Con.close();
-            } catch (Exception e) {
-                System.out.println(e);
-            }
+            String search = "%" + SearchField.getText() + "%";
+            String sql = "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                         "FROM Books, IssuedBook " +
+                         "WHERE Books.BookID = IssuedBook.BookID AND Books.BookName LIKE ?";
+            fillTableWithQuery(model, sql, search, true);
         } else if (BookIDRadio.isSelected()) {
-
-            // String Data[][]=null;
-            //  String Column[]=null;
-            String Search = SearchField.getText();
-            int BookIDV;
-            BookIDV = Integer.parseInt(Search);
-            try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,IssuedBook.UserID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID and IssuedBook.BookID=?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                ps.setInt(1, BookIDV);
-                ResultSet rs = ps.executeQuery();
-
-                ResultSetMetaData rsmd = rs.getMetaData();
-
-                int colnum = rsmd.getColumnCount();
-
-                //code here
-                String Row[];
-                Row = new String[colnum];
-                while (rs.next()) {
-                    for (int i = 1; i <= colnum; i++) {
-                        Row[i - 1] = rs.getString(i);
-                    }
-                    model.addRow(Row);
-                }
-                int rowcount = model.getRowCount();
-                System.out.println(rowcount);
-                if (rowcount == 0) {
-                    String NoRow[];
-                    NoRow = new String[7];
-                    NoRow[1] = "NO";
-                    NoRow[2] = "RESULT";
-                    NoRow[0] = "";
-                    NoRow[3] = "";
-                    NoRow[4] = "";
-                    NoRow[5] = "";
-                    NoRow[6] = "";
-                    model.addRow(NoRow);
-
-                }
-
-                //count++;
-                Con.close();
-            } catch (Exception e) {
-                System.out.println(e);
+            String search = SearchField.getText();
+            try {
+                int bookIDV = Integer.parseInt(search);
+                String sql = "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                             "FROM Books, IssuedBook " +
+                             "WHERE Books.BookID = IssuedBook.BookID AND IssuedBook.BookID=?";
+                fillTableWithQuery(model, sql, bookIDV, false);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid Book ID format.", AppConstants.ERROR_MSG, JOptionPane.ERROR_MESSAGE);
             }
         } else if (UserIDRadio.isSelected()) {
+            String search = SearchField.getText();
+            try {
+                int userIDV = Integer.parseInt(search);
+                String sql = "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                             "FROM Books, IssuedBook " +
+                             "WHERE Books.BookID = IssuedBook.BookID AND IssuedBook.UserID=?";
+                fillTableWithQuery(model, sql, userIDV, false);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid User ID format.", AppConstants.ERROR_MSG, JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Select Name or Author", "No Selection!", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_SearchActionPerformed
 
-            // String Data[][]=null;
-            //  String Column[]=null;
-            String Search = SearchField.getText();
-            int UserIDV;
-            UserIDV = Integer.parseInt(Search);
-            try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,IssuedBook.UserID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID and IssuedBook.UserID=?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                ps.setInt(1, UserIDV);
-                ResultSet rs = ps.executeQuery();
-
+    private void fillTableWithQuery(DefaultTableModel model, String sql, Object param, boolean isString) {
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            if (isString) {
+                ps.setString(1, param.toString());
+            } else {
+                ps.setInt(1, (Integer) param);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
                 ResultSetMetaData rsmd = rs.getMetaData();
-
                 int colnum = rsmd.getColumnCount();
-
-                //code here
-                String Row[];
-                Row = new String[colnum];
+                String[] Row = new String[colnum];
+                int addedRows = 0;
                 while (rs.next()) {
                     for (int i = 1; i <= colnum; i++) {
                         Row[i - 1] = rs.getString(i);
                     }
                     model.addRow(Row);
+                    addedRows++;
                 }
-                int rowcount = model.getRowCount();
-                System.out.println(rowcount);
-                if (rowcount == 0) {
-                    String NoRow[];
-                    NoRow = new String[7];
+                if (addedRows == 0) {
+                    String[] NoRow = new String[7];
                     NoRow[1] = "NO";
-                    NoRow[2] = "RESULT";
+                    NoRow[2] = AppConstants.RESULT;
                     NoRow[0] = "";
                     NoRow[3] = "";
                     NoRow[4] = "";
                     NoRow[5] = "";
                     NoRow[6] = "";
                     model.addRow(NoRow);
-
                 }
-
-                //count++;
-                Con.close();
-            } catch (Exception e) {
-                System.out.println(e);
             }
-        } else {
-
-            JOptionPane.showMessageDialog(NewView.this, "Select Name or Author", "No Selection!", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            System.out.println(e);
         }
-    }//GEN-LAST:event_SearchActionPerformed
+    }
 
     private void BookIDRadioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BookIDRadioActionPerformed
         // TODO add your handling code here:
@@ -421,31 +327,17 @@ public class NewView extends javax.swing.JFrame {
         while (model.getRowCount() > 0) {
             model.removeRow(model.getRowCount() - 1);
         }
-        try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement(
-                "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
-                "FROM Books, IssuedBook " +
-                "WHERE Books.BookID = IssuedBook.BookID",
-                ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE
-            );
-            ResultSet rs = ps.executeQuery();
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement(
+                 "SELECT IssuedBook.BookID, IssuedBook.UserID, Books.BookName, IssuedBook.IssueDate, IssuedBook.ReturnDate " +
+                 "FROM Books, IssuedBook " +
+                 "WHERE Books.BookID = IssuedBook.BookID",
+                 ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = ps.executeQuery()) {
 
             ResultSetMetaData rsmd = rs.getMetaData();
-
             int colnum = rsmd.getColumnCount();
 
-            /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
-                }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
             String Row[];
             Row = new String[colnum];
             while (rs.next()) {
@@ -454,9 +346,6 @@ public class NewView extends javax.swing.JFrame {
                 }
                 model.addRow(Row);
             }
-
-            //count++;
-            Con.close();
         } catch (Exception e) {
             System.out.println(e);
         }

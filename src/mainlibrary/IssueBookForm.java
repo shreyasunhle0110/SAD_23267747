@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import java.text.SimpleDateFormat;
 import org.apache.commons.validator.routines.IntegerValidator;
 import javax.xml.bind.ValidationException;
+import static mainlibrary.AppConstants.*;
 
 /**
  * IssueBookForm class for issuing books.
@@ -20,11 +21,14 @@ public class IssueBookForm extends javax.swing.JFrame {
 
     public IssueBookForm() {
         initComponents();
+        setDefaultDates();
+    }
+
+    private void setDefaultDates() {
         Calendar cal = Calendar.getInstance();
         IYear.setText(String.valueOf(cal.get(Calendar.YEAR)));
         IMonth.setText(String.valueOf(cal.get(Calendar.MONTH) + 1));
         IDate.setText(String.valueOf(cal.get(Calendar.DATE)));
-
         cal.add(Calendar.DAY_OF_YEAR, 15);
         RYear.setText(String.valueOf(cal.get(Calendar.YEAR)));
         RMonth.setText(String.valueOf(cal.get(Calendar.MONTH) + 1));
@@ -56,19 +60,19 @@ public class IssueBookForm extends javax.swing.JFrame {
         setBackground(new java.awt.Color(121, 22, 127));
         setForeground(new java.awt.Color(30, 51, 252));
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel1.setText("Book ID");
 
-        jLabel2.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel2.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel2.setText("User ID");
 
-        jLabel3.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel3.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel3.setText("Issue Date");
 
-        jLabel4.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel4.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel4.setText("Return Date");
 
-        jButton1.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jButton1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jButton1.setText("Issue");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -76,7 +80,7 @@ public class IssueBookForm extends javax.swing.JFrame {
             }
         });
 
-        jButton2.setFont(new java.awt.Font("Ubuntu", 0, 18)); // NOI18N
+        jButton2.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 18)); // NOI18N
         jButton2.setText("Back");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -122,16 +126,16 @@ public class IssueBookForm extends javax.swing.JFrame {
             }
         });
 
-        jLabel5.setFont(new java.awt.Font("Ubuntu", 1, 22)); // NOI18N
+        jLabel5.setFont(new java.awt.Font(AppConstants.UBUNTU, 1, 22)); // NOI18N
         jLabel5.setText("-");
 
-        jLabel6.setFont(new java.awt.Font("Ubuntu", 1, 22)); // NOI18N
+        jLabel6.setFont(new java.awt.Font(AppConstants.UBUNTU, 1, 22)); // NOI18N
         jLabel6.setText("-");
 
-        jLabel7.setFont(new java.awt.Font("Ubuntu", 1, 22)); // NOI18N
+        jLabel7.setFont(new java.awt.Font(AppConstants.UBUNTU, 1, 22)); // NOI18N
         jLabel7.setText("-");
 
-        jLabel8.setFont(new java.awt.Font("Ubuntu", 1, 22)); // NOI18N
+        jLabel8.setFont(new java.awt.Font(AppConstants.UBUNTU, 1, 22)); // NOI18N
         jLabel8.setText("-");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -276,64 +280,77 @@ public class IssueBookForm extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         try {
-            // Validate BookID and UserID inputs
             String bookIdInput = BookID.getText();
             String userIdInput = UserID.getText();
-            IntegerValidator validator = IntegerValidator.getInstance();
-
-            if (!validator.isValid(bookIdInput)) {
-                throw new ValidationException("Invalid Book ID format.");
-            }
-            if (!validator.isValid(userIdInput)) {
-                throw new ValidationException("Invalid User ID format.");
-            }
-
-            // Parse BookID and UserID as integers
-            int bookId = Integer.parseInt(bookIdInput);
-            int userId = Integer.parseInt(userIdInput);
-
-            // Parse issueDate and returnDate as Date objects
             String issueDateStr = IYear.getText() + "-" + IMonth.getText() + "-" + IDate.getText();
             String returnDateStr = RYear.getText() + "-" + RMonth.getText() + "-" + RDate.getText();
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            java.util.Date issueDate = dateFormat.parse(issueDateStr);
-            java.util.Date returnDate = dateFormat.parse(returnDateStr);
+            if (!validateAndShowError(bookIdInput, userIdInput, issueDateStr, returnDateStr)) return;
 
-            // Validate Book and User using Optional<Boolean>
-            Optional<Boolean> isBookValid = TransBookDao.bookValidate(bookId);
-            Optional<Boolean> isUserValid = TransBookDao.userValidate(userId);
+            int bookId = Integer.parseInt(bookIdInput);
+            int userId = Integer.parseInt(userIdInput);
+            java.sql.Date issueDate = java.sql.Date.valueOf(issueDateStr);
+            java.sql.Date returnDate = java.sql.Date.valueOf(returnDateStr);
 
-            if (isBookValid.orElse(false) && isUserValid.orElse(false)) {
-                Optional<Integer> canIssue = TransBookDao.check(userId);
-                if (canIssue.isPresent() && canIssue.get() == 0) {
-                    JOptionPane.showMessageDialog(this, "User has already issued the maximum number of books.",
-                            "Issue Error!", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    Optional<Integer> issueResult = TransBookDao.issueBook(bookId, userId,
-                            new java.sql.Date(issueDate.getTime()), new java.sql.Date(returnDate.getTime()));
-                    if (issueResult.isPresent() && issueResult.get() > 0) {
-                        JOptionPane.showMessageDialog(this, "The book has been issued successfully!", "Success",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        BookID.setText("");
-                        UserID.setText("");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Unable to issue the book.", "Issue Error!",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+            if (!validateBookAndUser(bookId, userId)) return;
+            if (!canUserIssue(userId)) return;
+
+            if (issueBook(bookId, userId, issueDate, returnDate)) {
+                JOptionPane.showMessageDialog(this, "The book has been issued successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                BookID.setText("");
+                UserID.setText("");
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid Book ID or User ID.", "Validation Error!",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Unable to issue the book.", ERROR_MSG, JOptionPane.ERROR_MESSAGE);
             }
-        } catch (ValidationException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Validation Error!", JOptionPane.ERROR_MESSAGE);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Book ID and User ID.",
-                    "Input Error!", JOptionPane.ERROR_MESSAGE);
-        } catch (java.text.ParseException e) {
-            JOptionPane.showMessageDialog(this, "Invalid date format.", "Date Error!", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Book ID and User ID.", ERROR_MSG, JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean validateAndShowError(String bookIdInput, String userIdInput, String issueDateStr, String returnDateStr) {
+        try {
+            validateInput(bookIdInput);
+            validateInput(userIdInput);
+            validateDate(issueDateStr);
+            validateDate(returnDateStr);
+        } catch (ValidationException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), VALIDATION_ERROR, JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        IntegerValidator validator = IntegerValidator.getInstance();
+        if (!validator.isValid(bookIdInput)) {
+            JOptionPane.showMessageDialog(this, "Invalid Book ID format.", VALIDATION_ERROR, JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (!validator.isValid(userIdInput)) {
+            JOptionPane.showMessageDialog(this, "Invalid User ID format.", VALIDATION_ERROR, JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateBookAndUser(int bookId, int userId) {
+        Optional<Boolean> isBookValid = TransBookDao.bookValidate(bookId);
+        Optional<Boolean> isUserValid = TransBookDao.userValidate(userId);
+        if (!isBookValid.orElse(false) || !isUserValid.orElse(false)) {
+            JOptionPane.showMessageDialog(this, "Invalid Book ID or User ID.", VALIDATION_ERROR, JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean canUserIssue(int userId) {
+        Optional<Integer> canIssue = TransBookDao.check(userId);
+        if (canIssue.isPresent() && canIssue.get() == 0) {
+            JOptionPane.showMessageDialog(this, "User has already issued the maximum number of books.", ERROR_MSG, JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean issueBook(int bookId, int userId, java.sql.Date issueDate, java.sql.Date returnDate) {
+        Optional<Integer> issueResult = TransBookDao.issueBook(bookId, userId, issueDate, returnDate);
+        return issueResult.isPresent() && issueResult.get() > 0;
     }
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
@@ -360,6 +377,28 @@ public class IssueBookForm extends javax.swing.JFrame {
 
     private void BookIDActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+    }
+
+    /**
+     * Validate input for SQL injection and emptiness.
+     * @see <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20: Improper Input Validation</a>
+     */
+    public static void validateInput(String input) throws ValidationException {
+        if (input == null || input.trim().isEmpty() || input.contains(";")) {
+            throw new ValidationException("Invalid characters in input");
+        }
+    }
+
+    /**
+     * Validate date string.
+     * @see <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20: Improper Input Validation</a>
+     */
+    public static void validateDate(String date) throws ValidationException {
+        try {
+            java.sql.Date.valueOf(date);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Invalid date format");
+        }
     }
 
     public static void main(String args[]) {

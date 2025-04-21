@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
-
+import static mainlibrary.AppConstants.*;
 /**
  *
  * @author bikash
@@ -29,36 +29,24 @@ public class ViewBook extends javax.swing.JFrame {
      * Creates new form ViewBook
      *
      * @throws java.sql.SQLException
+     * @see <a href="https://cwe.mitre.org/data/definitions/404.html">CWE-404: Improper Resource Shutdown or Release</a>
      */
     public ViewBook() throws SQLException {
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
         initComponents();
         DefaultTableModel model;
         model = (DefaultTableModel) jTable1.getModel();
         // String Data[][]=null;
         //  String Column[]=null;
-        try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
-            ResultSet rs = ps.executeQuery();
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
+             ResultSet rs = ps.executeQuery()) {
 
             ResultSetMetaData rsmd = rs.getMetaData();
-
             int colnum = rsmd.getColumnCount();
 
             NameRadio.setSelected(true);
 
-            /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
-                }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
             String Row[];
             Row = new String[colnum];
             while (rs.next()) {
@@ -67,9 +55,6 @@ public class ViewBook extends javax.swing.JFrame {
                 }
                 model.addRow(Row);
             }
-
-            //count++;
-            Con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -122,7 +107,7 @@ public class ViewBook extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTable1);
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 24)); // NOI18N
         jLabel1.setText("Books");
 
         jButton1.setText("Close");
@@ -255,119 +240,58 @@ public class ViewBook extends javax.swing.JFrame {
     }//GEN-LAST:event_NameRadioActionPerformed
 
     private void SearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SearchActionPerformed
-        // TODO add your handling code here:
-
-        DefaultTableModel model;
-        model = (DefaultTableModel) jTable1.getModel();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         while (model.getRowCount() > 0) {
             model.removeRow(model.getRowCount() - 1);
         }
+
         if (NameRadio.isSelected()) {
-            // String Data[][]=null;
-            //  String Column[]=null;
-            String Search = "%" + SearchField.getText() + "%";
-            try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books WHERE BookName LIKE ?");
-                ps.setString(1, Search);
-                ResultSet rs = ps.executeQuery();
-
-                ResultSetMetaData rsmd = rs.getMetaData();
-
-                int colnum = rsmd.getColumnCount();
-
-                //code here
-                String Row[];
-                Row = new String[colnum];
-                while (rs.next()) {
-                    for (int i = 1; i <= colnum; i++) {
-                        Row[i - 1] = rs.getString(i);
-                    }
-                    model.addRow(Row);
-                }
-                int rowcount = model.getRowCount();
-                System.out.println(rowcount);
-                if (rowcount == 0) {
-                    String NoRow[];
-                    NoRow = new String[7];
-                    NoRow[3] = "NO";
-                    NoRow[4] = "RESULT";
-                    NoRow[0] = "";
-                    NoRow[1] = "";
-                    NoRow[2] = "";
-                    NoRow[5] = "";
-                    NoRow[6] = "";
-                    model.addRow(NoRow);
-
-                }
-
-                //count++;
-                Con.close();
-            } catch (Exception e) {
-                System.out.println(e);
-            }
+            String search = "%" + SearchField.getText() + "%";
+            fillBookTable(model, "SELECT * FROM Books WHERE BookName LIKE ?", search);
         } else if (AuthorRadio.isSelected()) {
+            String search = "%" + SearchField.getText() + "%";
+            fillBookTable(model, "SELECT * FROM Books WHERE Author LIKE ?", search);
+        } else {
+            JOptionPane.showMessageDialog(this, "Select Name or Author", "No Selection!", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_SearchActionPerformed
 
-            // String Data[][]=null;
-            //  String Column[]=null;
-            String Search = "%" + SearchField.getText() + "%";
-            try (Connection Con = DB.getConnection()) {
-                PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books WHERE BookName LIKE ?");
-                ps.setString(1, Search);
-                ResultSet rs = ps.executeQuery();
-
+    private void fillBookTable(DefaultTableModel model, String sql, String param) {
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, param);
+            try (ResultSet rs = ps.executeQuery()) {
                 ResultSetMetaData rsmd = rs.getMetaData();
-
                 int colnum = rsmd.getColumnCount();
-
-                //code here
-                String Row[];
-                Row = new String[colnum];
+                int addedRows = 0;
+                String[] Row = new String[colnum];
                 while (rs.next()) {
                     for (int i = 1; i <= colnum; i++) {
                         Row[i - 1] = rs.getString(i);
                     }
-                    model.addRow(Row);
+                    model.addRow(Row.clone());
+                    addedRows++;
                 }
-                int rowcount = model.getRowCount();
-                System.out.println(rowcount);
-                if (rowcount == 0) {
-                    String NoRow[];
-                    NoRow = new String[7];
-                    NoRow[3] = "NO";
-                    NoRow[4] = "RESULT";
-                    NoRow[0] = "";
-                    NoRow[1] = "";
-                    NoRow[2] = "";
-                    NoRow[5] = "";
-                    NoRow[6] = "";
-                    model.addRow(NoRow);
-
+                if (addedRows == 0) {
+                    addNoResultRow(model);
                 }
-
-                //count++;
-                Con.close();
-            } catch (Exception e) {
-                System.out.println(e);
             }
-        } else {
-
-            JOptionPane.showMessageDialog(ViewBook.this, "Select Name or Author", "No Selection!", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            System.out.println(e);
         }
+    }
 
-        /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
-                }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
-
-    }//GEN-LAST:event_SearchActionPerformed
+    private void addNoResultRow(DefaultTableModel model) {
+        String[] NoRow = new String[7];
+        NoRow[3] = "NO";
+        NoRow[4] = AppConstants.RESULT;
+        NoRow[0] = "";
+        NoRow[1] = "";
+        NoRow[2] = "";
+        NoRow[5] = "";
+        NoRow[6] = "";
+        model.addRow(NoRow);
+    }
 
     private void AuthorRadioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AuthorRadioActionPerformed
         // TODO add your handling code here:
@@ -385,28 +309,13 @@ public class ViewBook extends javax.swing.JFrame {
         while (model.getRowCount() > 0) {
             model.removeRow(model.getRowCount() - 1);
         }
-        // String Data[][]=null;
-        //  String Column[]=null;
-        try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
-            ResultSet rs = ps.executeQuery();
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement("SELECT * FROM Books");
+             ResultSet rs = ps.executeQuery()) {
 
             ResultSetMetaData rsmd = rs.getMetaData();
-
             int colnum = rsmd.getColumnCount();
 
-            /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
-                }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
             String Row[];
             Row = new String[colnum];
             while (rs.next()) {
@@ -415,9 +324,6 @@ public class ViewBook extends javax.swing.JFrame {
                 }
                 model.addRow(Row);
             }
-
-            //count++;
-            Con.close();
         } catch (Exception e) {
             System.out.println(e);
         }

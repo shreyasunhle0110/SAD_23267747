@@ -28,11 +28,12 @@ public class UserView extends javax.swing.JFrame {
      * Creates new form ViewBook
      *
      * @throws java.sql.SQLException
+     * @see <a href="https://cwe.mitre.org/data/definitions/404.html">CWE-404: Improper Resource Shutdown or Release</a>
      */
     public static String UserID;
 
     public UserView() throws SQLException {
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);
 
         initComponents();
 
@@ -41,38 +42,23 @@ public class UserView extends javax.swing.JFrame {
         model = (DefaultTableModel) jTable1.getModel();
         // String Data[][]=null;
         //  String Column[]=null;
-        try (Connection Con = DB.getConnection()) {
-            PreparedStatement ps = Con.prepareStatement("select IssuedBook.BookID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID and IssuedBook.UserID=?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement(
+                 "select IssuedBook.BookID,Books.BookName , IssuedBook.IssueDate, IssuedBook.ReturnDate from Books,IssuedBook where Books.BookID=IssuedBook.BookID and IssuedBook.UserID=?",
+                 ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
             ps.setInt(1, UserIDV);
-            ResultSet rs = ps.executeQuery();
-
-            ResultSetMetaData rsmd = rs.getMetaData();
-
-            int colnum = rsmd.getColumnCount();
-
-            /*   Column = new String[colnum];
-            for(int i=1;i<=colnum;i++){
-               Column[i-1]=rsmd.getColumnClassName(i);
+            try (ResultSet rs = ps.executeQuery()) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int colnum = rsmd.getColumnCount();
+                String Row[];
+                Row = new String[colnum];
+                while (rs.next()) {
+                    for (int i = 1; i <= colnum; i++) {
+                        Row[i - 1] = rs.getString(i);
+                    }
+                    model.addRow(Row);
                 }
-            rs.last();
-            
-            int rows=rs.getRow();
-            rs.beforeFirst();
-            
-            String[][] data = new String[rows][colnum];
-            
-            int count=0; */
-            String Row[];
-            Row = new String[colnum];
-            while (rs.next()) {
-                for (int i = 1; i <= colnum; i++) {
-                    Row[i - 1] = rs.getString(i);
-                }
-                model.addRow(Row);
             }
-
-            //count++;
-            Con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -118,7 +104,7 @@ public class UserView extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTable1);
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 24)); // NOI18N
         jLabel1.setText("Books");
 
         jButton1.setText("Close");

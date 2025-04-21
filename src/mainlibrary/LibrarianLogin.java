@@ -124,7 +124,7 @@ public class LibrarianLogin extends javax.swing.JFrame {
                     .addContainerGap(397, Short.MAX_VALUE)))
         );
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 24)); // NOI18N
         jLabel1.setText("Librarian Login");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());

@@ -8,6 +8,7 @@ package mainlibrary;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import static mainlibrary.AppConstants.*;
 
 /**
  *
@@ -251,22 +252,18 @@ public class UserLoginSuccess extends javax.swing.JFrame {
 
         String User = args[0];
         String Pass = args[1];
-        try {
-            Connection Con;
-            Con = DB.getConnection();
-            PreparedStatement ps;
-            ps = Con.prepareStatement("select * from Users where UserName=? and UserPass=?");
+        try (Connection Con = DB.getConnection();
+             PreparedStatement ps = Con.prepareStatement("select * from Users where UserName=? and UserPass=?")) {
             ps.setString(1, User);
             ps.setString(2, Pass);
-            ResultSet rs;
-            rs = ps.executeQuery();
-            boolean status = rs.next();
-            GetName = User;
-            GetRegDate = rs.getString("RegDate");
-            GetEmail = rs.getString("Email");
-            GetUserID = rs.getString("UserID");
-            Con.close();
-
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    GetName = User;
+                    GetRegDate = rs.getString("RegDate");
+                    GetEmail = rs.getString("Email");
+                    GetUserID = rs.getString("UserID");
+                }
+            }
         } catch (Exception f) {
             System.out.println(f);
         }

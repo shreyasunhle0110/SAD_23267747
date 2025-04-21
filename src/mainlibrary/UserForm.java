@@ -6,7 +6,9 @@
 package mainlibrary;
 
 import java.util.Calendar;
+import java.sql.SQLException;
 import javax.swing.JOptionPane;
+import static mainlibrary.AppConstants.*;
 
 /**
  *
@@ -48,22 +50,22 @@ public class UserForm extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel1.setText("User Name");
 
-        jLabel3.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel3.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel3.setText("Email");
 
-        jLabel4.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel4.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel4.setText("Password");
 
-        jLabel5.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel5.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel5.setText("Academic");
 
-        jLabel6.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel6.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel6.setText("Program");
 
-        jLabel7.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel7.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel7.setText("Year");
 
         UserName.addActionListener(new java.awt.event.ActionListener() {
@@ -90,7 +92,7 @@ public class UserForm extends javax.swing.JFrame {
             }
         });
 
-        jButton1.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jButton1.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jButton1.setText("ADD USER");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -105,7 +107,7 @@ public class UserForm extends javax.swing.JFrame {
             }
         });
 
-        jLabel8.setFont(new java.awt.Font("Ubuntu", 0, 20)); // NOI18N
+        jLabel8.setFont(new java.awt.Font(AppConstants.UBUNTU, 0, 20)); // NOI18N
         jLabel8.setText("Position");
 
         Email.addActionListener(new java.awt.event.ActionListener() {
@@ -242,18 +244,21 @@ public class UserForm extends javax.swing.JFrame {
             String RYear = String.valueOf(cal.get(Calendar.YEAR));
             Date = RYear + "-" + RMonth + "-" + RDate;
 
-            if (UsersDao.AddUser(User, UserPass, UserEmail, Date) != 0) {
-                JOptionPane.showMessageDialog(UserForm.this, "User is Added Successfully!", "Adding New User!", JOptionPane.INFORMATION_MESSAGE);
-                UserName.setText("");
-                Password.setText("");
-                Email.setText("");
-                Position.setText("");
-                Program.setText("");
-                Year.setText("");
-            } else {
-                JOptionPane.showMessageDialog(UserForm.this, "Unable to add new User", "Adding new User Error!", JOptionPane.ERROR_MESSAGE);
+            try {
+                if (UsersDao.addUser(User, UserPass, UserEmail, Date)) {
+                    JOptionPane.showMessageDialog(UserForm.this, "User is Added Successfully!", "Adding New User!", JOptionPane.INFORMATION_MESSAGE);
+                    UserName.setText("");
+                    Password.setText("");
+                    Email.setText("");
+                    Position.setText("");
+                    Program.setText("");
+                    Year.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(UserForm.this, "Unable to add new User", "Adding new User Error!", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(UserForm.this, "Database error: " + e.getMessage(), AppConstants.ERROR_MSG, JOptionPane.ERROR_MESSAGE);
             }
-
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
