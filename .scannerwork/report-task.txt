@@ -2,5 +2,5 @@ projectKey=SAD
 serverUrl=http://localhost:9000
 serverVersion=25.4.0.105899
 dashboardUrl=http://localhost:9000/dashboard?id=SAD
-ceTaskId=0c278c39-eca2-4611-b8ca-843974717dbd
-ceTaskUrl=http://localhost:9000/api/ce/task?id=0c278c39-eca2-4611-b8ca-843974717dbd
+ceTaskId=d2177379-c18b-4ea8-8e1d-2b99079fba22
+ceTaskUrl=http://localhost:9000/api/ce/task?id=d2177379-c18b-4ea8-8e1d-2b99079fba22

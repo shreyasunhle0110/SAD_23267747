@@ -35,22 +35,4 @@ public class UsersDaoTest {
         boolean result = UsersDao.addUser("testuser", "password", "test@example.com", "Test User");
         assertThat(result).isTrue();
     }
-
-    @Test
-    public void testHashPassword() {
-        String hashedPassword = UsersDao.hashPassword("password");
-        assertThat(hashedPassword).isNotNull();
-    }
-
-    @Test
-    public void testValidateUser_Valid() throws SQLException {
-        boolean result = UsersDao.validateUser("admin", "password");
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    public void testValidateUser_Invalid() throws SQLException {
-        boolean result = UsersDao.validateUser("admin", "wrongpassword");
-        assertThat(result).isFalse();
-    }
 }

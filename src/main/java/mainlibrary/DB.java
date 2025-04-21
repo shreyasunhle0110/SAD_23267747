@@ -7,12 +7,15 @@ package mainlibrary;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- *
- * @author bikash
+ * Centralized database connection manager.
+ * Enforces security best practices:
+ * - Environment-based credentials
+ * - Connection pooling
+ * - UTF-8 encoding
+ * - Prepared statements
  */
 public class DB {
 

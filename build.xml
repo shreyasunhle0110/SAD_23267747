@@ -4,10 +4,10 @@
     <import file="nbproject/build-impl.xml" />
 
     <!-- Define properties -->
-    <property name="src.dir" value="src/mainlibrary" />
-    <property name="test.dir" value="src/mainlibrary/test" />
+    <property name="src.dir" value="src/main/java" />
+    <property name="test.dir" value="src/test/java" />
     <property name="build.dir" value="build" />
-    <property name="build.test.dir" value="build/test/mainlibrary" />
+    <property name="build.test.dir" value="build/test/java" />
     <property name="dist.dir" value="dist" />
     <property name="lib.dir" value="lib" />
     <property name="main.class" value="mainlibrary.MainLibrary" />
@@ -16,21 +16,24 @@
 
     <!-- Define test classpath -->
     <path id="test.classpath">
-        <pathelement location="${build.dir}"/>
-        <pathelement location="${build.test.dir}"/>
+        <pathelement location="${build.dir}" />
+        <pathelement location="${build.test.dir}" />
         <fileset dir="${lib.dir}">
-            <include name="junit-platform-console-standalone-1.10.2.jar"/>
-            <include name="junit-jupiter*.jar"/>
-            <include name="assertj-core-*.jar"/>
-            <include name="mockito*.jar"/>
-            <include name="*.jar"/>
-            <include name="jaxb-api*.jar"/>
-            <include name="jaxb-core*.jar"/>
-            <include name="jaxb-impl*.jar"/>
-            <include name="activation*.jar"/>
+            <include name="junit-platform-console-standalone-1.10.2.jar" />
+            <include name="junit-jupiter-api-5.10.2.jar" />
+            <include name="junit-jupiter-engine-5.10.2.jar" />
+            <include name="mockito-core-5.12.0.jar" />
+            <include name="mockito-junit-jupiter-5.12.0.jar" />
+            <include name="assertj-core-3.25.3.jar" />
+            <include name="mockito*.jar" />
+            <include name="*.jar" />
+            <include name="jaxb-api*.jar" />
+            <include name="jaxb-core*.jar" />
+            <include name="jaxb-impl*.jar" />
+            <include name="activation*.jar" />
         </fileset>
     </path>
-    
+
 
     <!-- Clean build and dist directories -->
     <target name="clean">
@@ -47,10 +50,10 @@
             <classpath>
                 <fileset dir="${lib.dir}">
                     <include name="*.jar" />
-                    <include name="jaxb-api*.jar"/>
-                    <include name="jaxb-core*.jar"/>
-                    <include name="jaxb-impl*.jar"/>
-                    <include name="activation*.jar"/>
+                    <include name="jaxb-api*.jar" />
+                    <include name="jaxb-core*.jar" />
+                    <include name="jaxb-impl*.jar" />
+                    <include name="activation*.jar" />
                 </fileset>
             </classpath>
         </javac>
@@ -76,7 +79,7 @@
 
     <!-- AspectJ classpath -->
     <path id="aspectj.classpath"></path>
-    
+
 
     <!-- Create JAR with dependencies -->
     <target name="jar" depends="compile">
@@ -85,10 +88,10 @@
         <copy todir="${dist.dir}/lib">
             <fileset dir="${lib.dir}">
                 <include name="*.jar" />
-                <include name="jaxb-api2.3.1.jar"/>
-                <include name="jaxb-core*.jar"/>
-                <include name="jaxb-impl*.jar"/>
-                <include name="activation*.jar"/>
+                <include name="jaxb-api2.3.1.jar" />
+                <include name="jaxb-core*.jar" />
+                <include name="jaxb-impl*.jar" />
+                <include name="activation*.jar" />
             </fileset>
         </copy>
         <jar destfile="${dist.dir}/securityProject.jar" basedir="${build.dir}">
@@ -106,10 +109,10 @@
                 <path refid="run.classpath" />
                 <fileset dir="${lib.dir}">
                     <include name="*.jar" />
-                    <include name="jaxb-api*.jar"/>
-                    <include name="jaxb-core*.jar"/>
-                    <include name="jaxb-impl*.jar"/>
-                    <include name="activation*.jar"/>
+                    <include name="jaxb-api*.jar" />
+                    <include name="jaxb-core*.jar" />
+                    <include name="jaxb-impl*.jar" />
+                    <include name="activation*.jar" />
                 </fileset>
             </classpath>
         </java>
@@ -175,31 +178,31 @@
     <!-- JaCoCo Configuration -->
     <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
         <classpath>
-            <pathelement location="${lib.dir}/org.jacoco.ant-0.8.12.jar"/>
-            <pathelement location="${lib.dir}/org.jacoco.core-0.8.12.jar"/>
-            <pathelement location="${lib.dir}/org.jacoco.report-0.8.12.jar"/>
-            <pathelement location="${lib.dir}/org.jacoco.agent-0.8.12.jar"/>
+            <pathelement location="${lib.dir}/org.jacoco.ant-0.8.12.jar" />
+            <pathelement location="${lib.dir}/org.jacoco.core-0.8.12.jar" />
+            <pathelement location="${lib.dir}/org.jacoco.report-0.8.12.jar" />
+            <pathelement location="${lib.dir}/org.jacoco.agent-0.8.12.jar" />
         </classpath>
     </taskdef>
 
     <target name="junit" depends="compile-tests">
-        <mkdir dir="${test.report.dir}"/>
-        <junit printsummary="yes" haltonfailure="yes" showoutput="false">
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" haltonfailure="yes" showoutput="yes">
             <classpath>
                 <path refid="test.classpath" />
                 <pathelement location="${build.test.dir}" />
             </classpath>
-            <formatter type="xml" usefile="true"/>
+            <formatter type="xml" usefile="true" />
             <batchtest fork="yes" todir="${test.report.dir}">
-                <fileset dir="${test.dir}">
-                    <include name="**/*Test.java"/>
+                <fileset dir="${build.test.dir}">
+                    <include name="**/*Test.java" />
                 </fileset>
             </batchtest>
         </junit>
     </target>
 
     <target name="coverage" depends="junit">
-        <mkdir dir="${test.report.dir}"/>
+        <mkdir dir="${test.report.dir}" />
         <mkdir dir="reports/jacoco" />
         <jacoco:coverage destfile="reports/jacoco.exec" excludes="mainlibrary/*Form.class">
             <junit printsummary="yes" haltonfailure="yes" showoutput="false">
@@ -207,10 +210,10 @@
                     <path refid="test.classpath" />
                     <pathelement location="${build.test.dir}" />
                 </classpath>
-                <formatter type="xml"/>
+                <formatter type="xml" />
                 <batchtest fork="yes" todir="${test.report.dir}">
-                    <fileset dir="${test.dir}">
-                        <include name="**/*Test.java"/>
+                    <fileset dir="${build.test.dir}">
+                        <include name="**/*Test.java" />
                     </fileset>
                 </batchtest>
             </junit>
